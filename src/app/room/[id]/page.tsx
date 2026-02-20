@@ -42,9 +42,11 @@ export default function RoomPage() {
     const [error, setError] = useState("");
     const [showVictory, setShowVictory] = useState(false);
     const [displayedSurface, setDisplayedSurface] = useState("");
+    const [channelStatus, setChannelStatus] = useState<"connecting" | "connected" | "error">("connecting");
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const aiRespondingRef = useRef(false);
+    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Auto-scroll
     useEffect(() => {
@@ -135,11 +137,28 @@ export default function RoomPage() {
 
         channel.subscribe(async (status) => {
             if (status === "SUBSCRIBED") {
+                setChannelStatus("connected");
+                // Stop polling if Realtime works
+                if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
                 await channel.track({ name, online_at: new Date().toISOString() });
+            } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+                setChannelStatus("error");
             }
         });
 
         channelRef.current = channel;
+
+        // Polling fallback — in case Realtime WebSocket fails (e.g., bad API key / network)
+        // Will be cleared automatically when Realtime successfully connects
+        if (pollRef.current) clearInterval(pollRef.current);
+        pollRef.current = setInterval(async () => {
+            const { data } = await supabase
+                .from("messages")
+                .select("*")
+                .eq("room_id", roomId)
+                .order("created_at", { ascending: true });
+            if (data) setMessages(data as Message[]);
+        }, 4000);
     }, [roomId]);
 
     const handleJoin = useCallback(async () => {
@@ -212,6 +231,16 @@ export default function RoomPage() {
         const content = input.trim();
         setInput("");
 
+        // Optimistic UI: show message immediately without waiting for Realtime
+        const optimistic: Message = {
+            id: Date.now(),
+            player_name: playerName,
+            content,
+            is_ai: false,
+            created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, optimistic]);
+
         // Write player message to DB
         await supabase.from("messages").insert({
             room_id: roomId,
@@ -242,6 +271,7 @@ export default function RoomPage() {
     // Cleanup on unmount
     useEffect(() => () => {
         if (channelRef.current) supabase.removeChannel(channelRef.current);
+        if (pollRef.current) clearInterval(pollRef.current);
     }, []);
 
     const theme = room?.puzzle_data?.theme ?? "bizarre";
@@ -314,8 +344,10 @@ export default function RoomPage() {
                 <header className="header">
                     <span className="header-icon">🐢</span>
                     <h1 className="header-title">{room?.puzzle_data.title ?? "加载中..."}</h1>
-                    {/* Online Players */}
+                    {/* Online Players + Connection Status */}
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto", marginRight: 16 }}>
+                        {/* Connection dot */}
+                        <div title={channelStatus === "connected" ? "实时连接正常" : channelStatus === "error" ? "实时连接失败（轮询模式）" : "连接中..."} style={{ width: 8, height: 8, borderRadius: "50%", background: channelStatus === "connected" ? "#2ecc71" : channelStatus === "error" ? "#e74c3c" : "#f39c12", boxShadow: channelStatus === "connected" ? "0 0 6px #2ecc71" : "none", flexShrink: 0 }} />
                         {players.map((p, i) => (
                             <div key={i} style={{
                                 background: "var(--accent-primary)",
