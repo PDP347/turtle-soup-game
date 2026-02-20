@@ -103,7 +103,7 @@ export default function HomePage() {
       if (error) throw error;
       router.push(`/room/${roomId}`);
     } catch (err) {
-      alert("创建房间失败，请检查 Supabase 配置：" + String(err));
+      alert("创建房间失败：" + ((err as { message?: string })?.message ?? JSON.stringify(err)));
     } finally {
       setIsCreatingRoom(false);
     }
