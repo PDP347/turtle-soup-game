@@ -233,15 +233,18 @@ export default function RoomPage() {
         const content = input.trim();
         setInput("");
 
-        // Optimistic UI: show message immediately without waiting for Realtime
-        const optimistic: Message = {
-            id: Date.now(),
-            player_name: playerName,
-            content,
-            is_ai: false,
-            created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, optimistic]);
+        // Optimistic UI: only show message immediately if Realtime is NOT connected
+        // If connected, we wait for the Realtime broadcast to avoid duplication
+        if (channelStatus.state !== "connected") {
+            const optimistic: Message = {
+                id: Date.now(),
+                player_name: playerName,
+                content,
+                is_ai: false,
+                created_at: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, optimistic]);
+        }
 
         // Write player message to DB
         await supabase.from("messages").insert({
