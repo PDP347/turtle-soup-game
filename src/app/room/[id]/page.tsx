@@ -42,7 +42,7 @@ export default function RoomPage() {
     const [error, setError] = useState("");
     const [showVictory, setShowVictory] = useState(false);
     const [displayedSurface, setDisplayedSurface] = useState("");
-    const [channelStatus, setChannelStatus] = useState<"connecting" | "connected" | "error">("connecting");
+    const [channelStatus, setChannelStatus] = useState<{ state: "connecting" | "connected" | "error", msg: string }>({ state: "connecting", msg: "" });
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const aiRespondingRef = useRef(false);
@@ -137,12 +137,14 @@ export default function RoomPage() {
 
         channel.subscribe(async (status) => {
             if (status === "SUBSCRIBED") {
-                setChannelStatus("connected");
+                setChannelStatus({ state: "connected", msg: "SUBSCRIBED" });
                 // Stop polling if Realtime works
                 if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
                 await channel.track({ name, online_at: new Date().toISOString() });
             } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-                setChannelStatus("error");
+                setChannelStatus({ state: "error", msg: status });
+            } else {
+                setChannelStatus((prev) => ({ ...prev, msg: status }));
             }
         });
 
@@ -347,7 +349,16 @@ export default function RoomPage() {
                     {/* Online Players + Connection Status */}
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto", marginRight: 16 }}>
                         {/* Connection dot */}
-                        <div title={channelStatus === "connected" ? "实时连接正常" : channelStatus === "error" ? "实时连接失败（轮询模式）" : "连接中..."} style={{ width: 8, height: 8, borderRadius: "50%", background: channelStatus === "connected" ? "#2ecc71" : channelStatus === "error" ? "#e74c3c" : "#f39c12", boxShadow: channelStatus === "connected" ? "0 0 6px #2ecc71" : "none", flexShrink: 0 }} />
+                        <div
+                            title={channelStatus.state === "connected" ? "实时连接正常" : `连接状态: ${channelStatus.msg || "正在连接..."}`}
+                            style={{
+                                width: 8, height: 8, borderRadius: "50%",
+                                background: channelStatus.state === "connected" ? "#2ecc71" : channelStatus.state === "error" ? "#e74c3c" : "#f39c12",
+                                boxShadow: channelStatus.state === "connected" ? "0 0 6px #2ecc71" : "none",
+                                flexShrink: 0,
+                                cursor: "help"
+                            }}
+                        />
                         {players.map((p, i) => (
                             <div key={i} style={{
                                 background: "var(--accent-primary)",
