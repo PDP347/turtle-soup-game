@@ -235,36 +235,66 @@ export default function HomePage() {
       <div className="app-layout">
         {!selectedPuzzle ? (
           <>
-            <header className="header">
-              <span className="header-icon">{globalTheme === "healing" ? "🕊️" : "🐢"}</span>
-              <h1 className="header-title">海龟汤：真相推理</h1>
-              {/* Join room section */}
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto" }}>
-                <input
-                  type="text"
-                  placeholder="输入房间号"
-                  value={joinRoomCode}
-                  onChange={(e) => setJoinRoomCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
-                  maxLength={4}
-                  style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "8px 14px", color: "var(--text-primary)", fontSize: 14, width: 110, fontFamily: "var(--font-mono)", outline: "none", textAlign: "center" }}
-                />
-                <button
-                  className="back-btn"
-                  onClick={handleJoinRoom}
-                  disabled={joinRoomCode.length !== 4}
-                >
-                  加入房间 →
-                </button>
+            {globalTheme === "hub" ? (
+              <div className="hero-section">
+                <div className="hero-overlay" />
+                <div className="hero-content">
+                  <h1 className="hero-title">迷雾档案馆</h1>
+                  <p className="hero-subtitle">尘封的真相，等待着被翻阅...</p>
+
+                  <div className="hero-carousel">
+                    {(Object.entries(THEME_META) as [PuzzleTheme, typeof THEME_META[PuzzleTheme]][]).map(([key, meta]) => (
+                      <div
+                        key={key}
+                        className={`hero-card js-theme-${key}`}
+                        onClick={() => { setActiveThemeFilter(key); setGlobalTheme(key); }}
+                      >
+                        <div className="hero-card-inner">
+                          <span className="hero-icon">{meta.icon}</span>
+                          <h3 className="hero-name">{meta.label}</h3>
+                          <p className="hero-desc">{meta.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <span className="header-subtitle">SITUATION PUZZLE · AI HOSTED</span>
-            </header>
+            ) : (
+              <header className="header">
+                <span className="header-icon">{globalTheme === "healing" ? "🕊️" : "🐢"}</span>
+                <h1 className="header-title">海龟汤：真相推理</h1>
+                {/* Join room section */}
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto" }}>
+                  <input
+                    type="text"
+                    placeholder="输入房间号"
+                    value={joinRoomCode}
+                    onChange={(e) => setJoinRoomCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
+                    maxLength={4}
+                    style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "8px 14px", color: "var(--text-primary)", fontSize: 14, width: 110, fontFamily: "var(--font-mono)", outline: "none", textAlign: "center" }}
+                  />
+                  <button
+                    className="back-btn"
+                    onClick={handleJoinRoom}
+                    disabled={joinRoomCode.length !== 4}
+                  >
+                    加入房间 →
+                  </button>
+                </div>
+                <span className="header-subtitle">SITUATION PUZZLE · AI HOSTED</span>
+              </header>
+            )}
 
             <main className="main-content puzzle-selection">
-              <h2 className={`selection-title ${(globalTheme !== "healing" && globalTheme !== "hub") ? "glitch-text" : ""}`}>
-                选择你的谜题
-              </h2>
-              <p className="selection-subtitle">每一道题背后的真相，由你亲自揭开。</p>
+              {globalTheme !== "hub" && (
+                <>
+                  <h2 className={`selection-title ${globalTheme !== "healing" ? "glitch-text" : ""}`}>
+                    {THEME_META[globalTheme as PuzzleTheme]?.label} 卷宗
+                  </h2>
+                  <p className="selection-subtitle">每一道题背后的真相，由你亲自揭开。</p>
+                </>
+              )}
 
               <div className="search-bar-container">
                 <select className="search-select" value={searchTheme} onChange={(e) => setSearchTheme(e.target.value as PuzzleTheme)}>
