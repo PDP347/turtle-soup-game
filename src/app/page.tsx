@@ -243,19 +243,24 @@ export default function HomePage() {
                   <p className="hero-subtitle">尘封的真相，等待着被翻阅...</p>
 
                   <div className="hero-carousel">
-                    {(Object.entries(THEME_META) as [PuzzleTheme, typeof THEME_META[PuzzleTheme]][]).map(([key, meta]) => (
-                      <div
-                        key={key}
-                        className={`hero-card js-theme-${key}`}
-                        onClick={() => { setActiveThemeFilter(key); setGlobalTheme(key); }}
-                      >
-                        <div className="hero-card-inner">
-                          <span className="hero-icon">{meta.icon}</span>
-                          <h3 className="hero-name">{meta.label}</h3>
-                          <p className="hero-desc">{meta.description}</p>
+                    {(Object.entries(THEME_META) as [PuzzleTheme, typeof THEME_META[PuzzleTheme]][]).map(([key, meta]) => {
+                      const imgName = { bizarre: 'bizarre', healing: 'healing', suspense: 'suspense', urbanLegend: 'urban', darkHumor: 'dark_humor' }[key];
+                      return (
+                        <div
+                          key={key}
+                          className={`hero-card js-theme-${key}`}
+                          onClick={() => { setActiveThemeFilter(key); setGlobalTheme(key); }}
+                        >
+                          <div className="hero-card-bg" style={{ backgroundImage: `url('/images/themes/${imgName}.png')` }} />
+                          <div className="hero-card-overlay" />
+                          <div className="hero-card-inner">
+                            <span className="hero-icon">{meta.icon}</span>
+                            <h3 className="hero-name">{meta.label}</h3>
+                            <p className="hero-desc">{meta.description}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
