@@ -75,6 +75,29 @@
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='1' result='noise'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.05 0' in='noise'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' fill='%23fefaf4'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+.theme-hub {
+  --bg-void: #050508;
+  --bg-surface: #0a0a0f;
+  --bg-card: rgba(15, 15, 20, 0.7);
+  --bg-card-hover: rgba(25, 25, 30, 0.9);
+  --accent-primary: #e0e0e0;
+  --accent-primary-glow: rgba(255, 255, 255, 0.3);
+  --accent-secondary: #718096;
+  --text-primary: #f7fafc;
+  --text-secondary: #a0aec0;
+  --text-muted: #4a5568;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-accent: rgba(255, 255, 255, 0.3);
+  --shadow-deep: 0 20px 60px rgba(0, 0, 0, 0.9);
+  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --bg-pattern: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(200, 200, 255, 0.03) 0%, transparent 40%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' result='noise'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
 .theme-suspense {
   --bg-void: #1a1a2e;
   --bg-surface: #16213e;

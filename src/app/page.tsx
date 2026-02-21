@@ -12,7 +12,7 @@ interface Message {
 
 export default function HomePage() {
   const router = useRouter();
-  const [globalTheme, setGlobalTheme] = useState<PuzzleTheme>("bizarre");
+  const [globalTheme, setGlobalTheme] = useState<PuzzleTheme | "hub">("hub");
   const [activeThemeFilter, setActiveThemeFilter] = useState<PuzzleTheme | "all">("all");
   const newPuzzleRef = useRef<HTMLDivElement | null>(null);
   const [allPuzzles, setAllPuzzles] = useState<Puzzle[]>(puzzles);
@@ -85,7 +85,7 @@ export default function HomePage() {
 
   const handleBack = useCallback(() => {
     setSelectedPuzzle(null);
-    setGlobalTheme(activeThemeFilter === "all" ? "bizarre" : activeThemeFilter);
+    setGlobalTheme(activeThemeFilter === "all" ? "hub" : activeThemeFilter);
     setMessages([]);
     setShowVictory(false);
     setVictoryText("");
@@ -261,7 +261,7 @@ export default function HomePage() {
             </header>
 
             <main className="main-content puzzle-selection">
-              <h2 className={`selection-title ${globalTheme !== "healing" ? "glitch-text" : ""}`}>
+              <h2 className={`selection-title ${(globalTheme !== "healing" && globalTheme !== "hub") ? "glitch-text" : ""}`}>
                 选择你的谜题
               </h2>
               <p className="selection-subtitle">每一道题背后的真相，由你亲自揭开。</p>
@@ -288,7 +288,7 @@ export default function HomePage() {
               <div className="theme-switch-container">
                 <button
                   className={`theme-btn ${activeThemeFilter === "all" ? "active" : ""}`}
-                  onClick={() => { setActiveThemeFilter("all"); setGlobalTheme("bizarre"); }}
+                  onClick={() => { setActiveThemeFilter("all"); setGlobalTheme("hub"); }}
                 >
                   🗂️ 全部
                 </button>
