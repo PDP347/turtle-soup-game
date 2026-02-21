@@ -85,7 +85,7 @@ export default function HomePage() {
 
   const handleBack = useCallback(() => {
     setSelectedPuzzle(null);
-    setGlobalTheme(activeThemeFilter === "healing" ? "healing" : "bizarre");
+    setGlobalTheme(activeThemeFilter === "all" ? "bizarre" : activeThemeFilter);
     setMessages([]);
     setShowVictory(false);
     setVictoryText("");
@@ -133,6 +133,7 @@ export default function HomePage() {
       setAllPuzzles([...puzzles, ...getGeneratedPuzzles()]);
       // Show the new puzzle in list; reset filter so it's visible
       setActiveThemeFilter(newPuzzle.theme);
+      setGlobalTheme(newPuzzle.theme);
       // Scroll to new card after render
       setTimeout(() => newPuzzleRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
     } catch (err) {
@@ -260,7 +261,7 @@ export default function HomePage() {
             </header>
 
             <main className="main-content puzzle-selection">
-              <h2 className={`selection-title ${globalTheme === "bizarre" ? "glitch-text" : ""}`}>
+              <h2 className={`selection-title ${globalTheme !== "healing" ? "glitch-text" : ""}`}>
                 选择你的谜题
               </h2>
               <p className="selection-subtitle">每一道题背后的真相，由你亲自揭开。</p>
@@ -297,7 +298,7 @@ export default function HomePage() {
                     className={`theme-btn ${activeThemeFilter === key ? "active" : ""}`}
                     onClick={() => {
                       setActiveThemeFilter(key);
-                      setGlobalTheme(key === "healing" ? "healing" : "bizarre");
+                      setGlobalTheme(key);
                     }}
                   >
                     {meta.icon} {meta.label}
@@ -317,7 +318,7 @@ export default function HomePage() {
                     tabIndex={0}
                   >
                     <div className="card-header">
-                      <h3 className={`card-title ${puzzle.theme === "bizarre" || puzzle.theme === "suspense" || puzzle.theme === "urbanLegend" || puzzle.theme === "darkHumor" ? "glitch-text" : ""}`}>
+                      <h3 className={`card-title ${puzzle.theme !== "healing" ? "glitch-text" : ""}`}>
                         {puzzle.title}
                         {puzzle.isGenerated && <span style={{ fontSize: 12, marginLeft: 8, opacity: 0.8 }}>🔎 AI网搜</span>}
                       </h3>
