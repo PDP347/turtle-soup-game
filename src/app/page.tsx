@@ -34,6 +34,11 @@ export default function HomePage() {
   const [searchTheme, setSearchTheme] = useState<PuzzleTheme>("bizarre");
   const [searchDiff, setSearchDiff] = useState<PuzzleDifficulty>("困难");
 
+  // Leaderboard State
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState<Array<{ name: string, wins: number, questions: number, themes: string[] }>>([]);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+
   // Sync theme
   useEffect(() => {
     document.body.className = `theme-${globalTheme}`;
@@ -143,6 +148,34 @@ export default function HomePage() {
     }
   };
 
+  const handleOpenLeaderboard = async () => {
+    setShowLeaderboard(true);
+    setIsLoadingStats(true);
+    try {
+      const { data } = await supabase.from("player_stats").select("*");
+      if (data) {
+        const agg: Record<string, { wins: number, questions: number, themes: Set<string> }> = {};
+        for (const row of data) {
+          if (!agg[row.user_id]) agg[row.user_id] = { wins: 0, questions: 0, themes: new Set() };
+          agg[row.user_id].wins += row.matches_won;
+          agg[row.user_id].questions += row.total_questions;
+          agg[row.user_id].themes.add(row.theme);
+        }
+
+        const sorted = Object.entries(agg)
+          .map(([name, stats]) => ({ name, ...stats, themes: Array.from(stats.themes) }))
+          .sort((a, b) => b.wins - a.wins || a.questions - b.questions)
+          .slice(0, 50);
+
+        setLeaderboardData(sorted);
+      }
+    } catch (e) {
+      console.error("Leaderboard fetch failed", e);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
   // Bug fix: send full puzzle object so AI-generated puzzles (not in server memory) also work
   const handleSend = useCallback(async () => {
     if (!input.trim() || isLoading || !selectedPuzzle) return;
@@ -232,6 +265,40 @@ export default function HomePage() {
         )}
       </div>
 
+      {showLeaderboard && (
+        <div className="victory-overlay" onClick={() => setShowLeaderboard(false)}>
+          <div className="victory-modal" style={{ maxWidth: 500, width: "90%", padding: "40px 30px" }} onClick={(e) => e.stopPropagation()}>
+            <h2 className="victory-title" style={{ color: "var(--accent-primary)", marginBottom: 24, fontSize: 26, letterSpacing: 2 }}>🏆 顶尖侦探档案</h2>
+            {isLoadingStats ? (
+              <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>查阅绝密档案中...</div>
+            ) : leaderboardData.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>虚位以待。去揭开真相吧！</div>
+            ) : (
+              <div className="custom-scroll" style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24, maxHeight: "50vh", overflowY: "auto", paddingRight: 8 }}>
+                {leaderboardData.map((player, idx) => (
+                  <div key={player.name} style={{ display: "flex", alignItems: "center", background: "var(--bg-card)", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: 24, fontWeight: "bold", width: 44, color: idx === 0 ? "#f1c40f" : idx === 1 ? "#bdc3c7" : idx === 2 ? "#d35400" : "var(--text-muted)" }}>#{idx + 1}</div>
+                    <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{player.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        专精: {player.themes.map(t => THEME_META[t as PuzzleTheme]?.label || t).join(" / ")}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>{player.wins} <span style={{ fontSize: 12, fontWeight: "normal" }}>次破案</span></div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>共计 {player.questions} 问</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className="back-btn" style={{ width: "100%", justifyContent: "center", background: "rgba(255,255,255,0.05)", padding: "12px" }} onClick={() => setShowLeaderboard(false)}>
+              合上档案册
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="app-layout">
         {!selectedPuzzle ? (
           <>
@@ -241,6 +308,15 @@ export default function HomePage() {
                 <div className="hero-content">
                   <h1 className="hero-title">迷雾档案馆</h1>
                   <p className="hero-subtitle">尘封的真相，等待着被翻阅...</p>
+
+                  <button
+                    onClick={handleOpenLeaderboard}
+                    style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--accent-primary)", color: "var(--accent-primary)", padding: "10px 28px", borderRadius: 30, cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600, marginTop: "16px", marginBottom: "40px", transition: "all 0.3s", textTransform: "uppercase", letterSpacing: 2 }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-primary)"; e.currentTarget.style.color = "#000"; e.currentTarget.style.boxShadow = "0 0 20px var(--accent-primary-glow)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(0,0,0,0.5)"; e.currentTarget.style.color = "var(--accent-primary)"; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    🏆 顶尖侦探档案
+                  </button>
 
                   <div className="hero-carousel">
                     {(Object.entries(THEME_META) as [PuzzleTheme, typeof THEME_META[PuzzleTheme]][]).map(([key, meta]) => {
@@ -303,8 +379,9 @@ export default function HomePage() {
 
               <div className="search-bar-container">
                 <select className="search-select" value={searchTheme} onChange={(e) => setSearchTheme(e.target.value as PuzzleTheme)}>
-                  <option value="bizarre">风格：猎奇/恐怖</option>
-                  <option value="healing">风格：温馨/治愈</option>
+                  {(Object.entries(THEME_META) as [PuzzleTheme, typeof THEME_META[PuzzleTheme]][]).map(([key, meta]) => (
+                    <option key={key} value={key}>风格：{meta.label}</option>
+                  ))}
                 </select>
                 <select className="search-select" value={searchDiff} onChange={(e) => setSearchDiff(e.target.value as PuzzleDifficulty)}>
                   <option value="简单">难度：简单</option>

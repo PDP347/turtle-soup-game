@@ -32,3 +32,16 @@ alter table public.messages enable row level security;
 
 create policy "allow all rooms"    on public.rooms    for all using (true) with check (true);
 create policy "allow all messages" on public.messages for all using (true) with check (true);
+
+-- 5. 玩家统计表 (V5 积分系统)
+create table if not exists public.player_stats (
+  id          uuid        primary key default gen_random_uuid(),
+  user_id     text        not null,             -- 简单起见，可以用本地存储的唯一 ID 或昵称
+  theme       text        not null,             -- 对应 PuzzleTheme
+  matches_won integer     not null default 0,   -- 胜利次数
+  total_questions integer not null default 0,   -- 总提问数
+  last_played timestamptz not null default now()
+);
+
+alter table public.player_stats enable row level security;
+create policy "allow all stats" on public.player_stats for all using (true) with check (true);

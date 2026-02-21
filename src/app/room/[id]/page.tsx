@@ -41,6 +41,7 @@ export default function RoomPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [showVictory, setShowVictory] = useState(false);
+    const [isGeneratingNext, setIsGeneratingNext] = useState(false);
     const [displayedSurface, setDisplayedSurface] = useState("");
     const [channelStatus, setChannelStatus] = useState<{ state: "connecting" | "connected" | "error", msg: string }>({ state: "connecting", msg: "" });
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -89,6 +90,12 @@ export default function RoomPage() {
         if (data.status === "revealed") setShowVictory(true);
     }, [roomId]);
 
+    // Fetch room on mount so theme applies immediately
+    useEffect(() => {
+        loadRoom();
+    }, [loadRoom]);
+
+
     const loadMessages = useCallback(async () => {
         const { data } = await supabase
             .from("messages")
@@ -131,8 +138,26 @@ export default function RoomPage() {
             (payload) => {
                 const updated = payload.new as RoomData;
                 setRoom(updated);
-                if (updated.status === "revealed") setShowVictory(true);
+                if (updated.status === "revealed") {
+                    setShowVictory(true);
+                } else if (updated.status === "playing") {
+                    setShowVictory(false);
+                    setIsGeneratingNext(false); // Make sure to reset generation state
+                    setMessages([]); // Clear chat for new round
+                }
             }
+        );
+
+        // Realtime Broadcasts for temporary states
+        channel.on(
+            "broadcast",
+            { event: "generating_next" },
+            () => setIsGeneratingNext(true)
+        );
+        channel.on(
+            "broadcast",
+            { event: "cancel_generating" },
+            () => setIsGeneratingNext(false)
         );
 
         channel.subscribe(async (status) => {
@@ -150,28 +175,39 @@ export default function RoomPage() {
 
         channelRef.current = channel;
 
-        // Polling fallback — in case Realtime WebSocket fails (e.g., bad API key / network)
-        // Will be cleared automatically when Realtime successfully connects
+        // Polling fallback — in case Realtime WebSocket fails
         if (pollRef.current) clearInterval(pollRef.current);
         pollRef.current = setInterval(async () => {
-            const { data } = await supabase
-                .from("messages")
-                .select("*")
-                .eq("room_id", roomId)
-                .order("created_at", { ascending: true });
-            if (data) setMessages(data as Message[]);
+            const [msgRes, roomRes] = await Promise.all([
+                supabase.from("messages").select("*").eq("room_id", roomId).order("created_at", { ascending: true }),
+                supabase.from("rooms").select("*").eq("id", roomId).single()
+            ]);
+
+            if (msgRes.data) setMessages(msgRes.data as Message[]);
+            if (roomRes.data) {
+                const updated = roomRes.data as RoomData;
+                setRoom((prev) => {
+                    if (prev?.status === "revealed" && updated.status === "playing") {
+                        setShowVictory(false);
+                        setIsGeneratingNext(false);
+                    } else if (prev?.status !== "revealed" && updated.status === "revealed") {
+                        setShowVictory(true);
+                    }
+                    return updated;
+                });
+            }
         }, 4000);
     }, [roomId]);
 
     const handleJoin = useCallback(async () => {
         if (!playerName.trim()) return;
         setIsLoading(true);
-        await loadRoom();
+        // Room is already loaded on mount; just load messages
         await loadMessages();
         subscribeRealtime(playerName.trim());
         setHasJoined(true);
         setIsLoading(false);
-    }, [playerName, loadRoom, loadMessages, subscribeRealtime]);
+    }, [playerName, loadMessages, subscribeRealtime]);
 
     // AI answering: only the first player who asks triggers the API
     const triggerAI = useCallback(async (question: string) => {
@@ -273,6 +309,94 @@ export default function RoomPage() {
         await supabase.from("rooms").update({ status: "revealed" }).eq("id", roomId);
     }, [room, roomId]);
 
+    const handlePlayAgain = useCallback(async () => {
+        if (!room || isGeneratingNext) return;
+        setIsGeneratingNext(true);
+
+        // Broadcast generation state to other clients immediately
+        if (channelRef.current) {
+            channelRef.current.send({
+                type: "broadcast",
+                event: "generating_next",
+                payload: {}
+            });
+        }
+
+        try {
+            // ----- 1. 积分与成就结算 (Score Settlement) -----
+            const playerQuestions: Record<string, number> = {};
+            messages.forEach((msg) => {
+                if (!msg.is_ai) {
+                    playerQuestions[msg.player_name] = (playerQuestions[msg.player_name] || 0) + 1;
+                }
+            });
+
+            const currentTheme = room.puzzle_data.theme || "bizarre";
+
+            for (const [name, count] of Object.entries(playerQuestions)) {
+                const { data, error: fetchError } = await supabase
+                    .from("player_stats")
+                    .select("id, matches_won, total_questions")
+                    .eq("user_id", name)
+                    .eq("theme", currentTheme)
+                    .maybeSingle(); // maybeSingle handles 0 rows better than .single()
+
+                if (data && !fetchError) {
+                    await supabase.from("player_stats").update({
+                        matches_won: data.matches_won + 1,
+                        total_questions: data.total_questions + count,
+                        last_played: new Date().toISOString()
+                    }).eq("id", data.id);
+                } else {
+                    await supabase.from("player_stats").insert({
+                        user_id: name,
+                        theme: currentTheme,
+                        matches_won: 1,
+                        total_questions: count
+                    });
+                }
+            }
+
+            // ----- 2. 生成同主题新谜题 -----
+            const res = await fetch("/api/puzzle", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ theme: currentTheme, difficulty: room.puzzle_data.difficulty || "中等" }),
+            });
+            if (!res.ok) throw new Error("API error");
+            const data = await res.json();
+            const newPuzzle = data.puzzle;
+
+            if (!newPuzzle) throw new Error("No puzzle data in response");
+
+            // Delete specific room messages
+            await supabase.from("messages").delete().eq("room_id", roomId);
+
+            // Update room
+            await supabase.from("rooms").update({
+                puzzle_data: newPuzzle,
+                status: "playing"
+            }).eq("id", roomId);
+
+            // Local wipe immediately (to avoid flickers)
+            setMessages([]);
+            setShowVictory(false);
+
+        } catch (e) {
+            console.error("Play again failed", e);
+            alert("再来一局生成失败，请稍后重试。");
+            if (channelRef.current) {
+                channelRef.current.send({
+                    type: "broadcast",
+                    event: "cancel_generating",
+                    payload: {}
+                });
+            }
+        } finally {
+            setIsGeneratingNext(false);
+        }
+    }, [room, roomId, isGeneratingNext]);
+
     // Cleanup on unmount
     useEffect(() => () => {
         if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -288,8 +412,12 @@ export default function RoomPage() {
         return (
             <div className="app-layout" style={{ justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24 }}>
                 <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-lg)", padding: "48px 40px", maxWidth: 400, width: "100%", boxShadow: "var(--shadow-deep)", display: "flex", flexDirection: "column", gap: 24 }}>
-                    <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", textAlign: "center" }}>
-                        🐢 加入房间 #{roomId}
+                    <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", textAlign: "center", lineHeight: 1.4 }}>
+                        🐢 加入房间
+                        <br />
+                        <span style={{ fontSize: 18, color: "var(--accent-primary)" }}>
+                            {room ? `《${room.puzzle_data.title}》` : "加载中..."}
+                        </span>
                     </h2>
                     <p style={{ color: "var(--text-muted)", fontSize: 14, textAlign: "center", fontFamily: "var(--font-mono)" }}>
                         请输入你的玩家昵称，最多 {MAX_PLAYERS} 人
@@ -340,7 +468,12 @@ export default function RoomPage() {
                         {theme === "healing" && <div className="victory-icon">☀️</div>}
                         <h2 className="victory-title">真相大白</h2>
                         <p className="victory-text">{victoryText}</p>
-                        <button className="victory-btn" onClick={() => router.push("/")}>结束本局</button>
+                        <div style={{ display: "flex", gap: "12px", width: "100%", justifyContent: "center" }}>
+                            <button className="victory-btn" style={{ flex: 1, padding: "12px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }} onClick={() => router.push("/")}>结束本局</button>
+                            <button className="victory-btn" style={{ flex: 1, padding: "12px" }} onClick={handlePlayAgain} disabled={isGeneratingNext}>
+                                {isGeneratingNext ? "生成中..." : "再来一局 🔄"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -414,18 +547,23 @@ export default function RoomPage() {
                             {messages.length === 0 && (
                                 <p className="empty-hint">🕯️ 等待玩家提问... 他只回答：是 / 否 / 无关</p>
                             )}
-                            {messages.map((msg) => {
+                            {messages.map((msg, index) => {
                                 const isVictory = msg.is_ai && msg.content.includes("【真相大白】");
                                 const isMe = msg.player_name === playerName;
+                                // Simple parsing for the chat UI to look decent
+                                let displayContent = msg.content;
+                                if (isVictory) {
+                                    displayContent = displayContent.replace("【真相大白】", "⚡ 真相大白\n");
+                                }
                                 return (
-                                    <div key={msg.id} className={`message-row ${msg.is_ai ? "assistant" : isMe ? "user" : "assistant"}`}>
+                                    <div key={msg.id || index} className={`message-row ${msg.is_ai ? "assistant" : isMe ? "user" : "assistant"}`}>
                                         {!msg.is_ai && !isMe && (
                                             <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4, paddingLeft: 4, fontFamily: "var(--font-mono)" }}>
                                                 {msg.player_name}
                                             </div>
                                         )}
-                                        <div className={`bubble ${msg.is_ai ? "assistant" : isMe ? "user" : "assistant"}${isVictory ? " victory" : ""}`}>
-                                            {msg.content.replace("【真相大白】", "⚡ 真相大白\n")}
+                                        <div className={`bubble ${msg.is_ai ? "assistant" : isMe ? "user" : "assistant"}${isVictory ? " victory" : ""}`} style={{ whiteSpace: "pre-wrap" }}>
+                                            {displayContent}
                                         </div>
                                     </div>
                                 );
