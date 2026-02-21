@@ -1473,7 +1473,7 @@ body {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
 }
 
 .hero-title {
@@ -1499,7 +1499,7 @@ body {
 .hero-carousel {
   display: flex;
   gap: 20px;
-  padding: 20px 10px;
+  padding: 20px 5vw;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
