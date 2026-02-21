@@ -1405,6 +1405,175 @@ body {
   box-shadow: 0 10px 30px var(--accent-primary-glow);
 }
 
+/* Suspense Victory Modal: Top Secret Manila Dossier */
+.theme-suspense .victory-modal {
+  background: #e4d8b4;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(0, 0, 0, 0.05) 20px), url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+  border-radius: 4px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d4c59a;
+  position: relative;
+  overflow: visible;
+}
+
+.theme-suspense .victory-modal::after {
+  content: "CASE SOLVED";
+  position: absolute;
+  top: 30px;
+  right: -20px;
+  color: #c0392b;
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  border: 4px solid #c0392b;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transform: rotate(15deg);
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.theme-suspense .victory-title {
+  color: #2c3e50;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 2px solid #2c3e50;
+  padding-bottom: 10px;
+  margin-bottom: 24px;
+  text-shadow: none;
+}
+
+.theme-suspense .victory-text {
+  color: #34495e;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  text-align: left;
+}
+
+.theme-suspense .victory-btn {
+  background: #2c3e50;
+  color: #fff;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Urban Legend Victory Modal: Fatal System Error */
+.theme-urbanLegend .victory-modal {
+  background: #0000aa;
+  /* classic BSOD blue */
+  border-radius: 0;
+  border: 2px solid #aaaaaa;
+  box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  position: relative;
+}
+
+.theme-urbanLegend .victory-modal::before {
+  content: "SYSTEM ALERT: TRUTH_DECRYPTED.exe";
+  display: block;
+  background: #aaaaaa;
+  color: #0000aa;
+  padding: 4px 10px;
+  font-weight: bold;
+  text-align: left;
+  margin: -48px -48px 30px -48px;
+}
+
+.theme-urbanLegend .victory-icon {
+  display: none;
+}
+
+.theme-urbanLegend .victory-title {
+  color: #ffffff;
+  background: #0000aa;
+  font-size: 24px;
+  text-align: left;
+  margin-bottom: 20px;
+  text-shadow: none;
+}
+
+.theme-urbanLegend .victory-text {
+  color: #ffffff;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.theme-urbanLegend .victory-btn {
+  background: #aaaaaa;
+  color: #0000aa;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.theme-urbanLegend .victory-btn:hover {
+  background: #ffffff;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Dark Humor Victory Modal: Vintage Comic / Circus Ticket */
+.theme-darkHumor .victory-modal {
+  background: #fdfbf7;
+  border: 4px solid #1a1a1a;
+  border-radius: 0;
+  box-shadow: 15px 15px 0 #1a1a1a;
+  transform: rotate(-2deg);
+  position: relative;
+}
+
+.theme-darkHumor .victory-modal::before {
+  content: "★ THE GRAND REVEAL ★";
+  display: block;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+  border-bottom: 2px dashed #1a1a1a;
+  padding-bottom: 15px;
+}
+
+.theme-darkHumor .victory-title {
+  color: #1a1a1a;
+  font-family: var(--font-serif);
+  font-size: 42px;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0 #bc2a2a;
+  margin-bottom: 20px;
+}
+
+.theme-darkHumor .victory-text {
+  color: #1a1a1a;
+  font-weight: 600;
+  text-align: center;
+  border-top: 2px solid #1a1a1a;
+  border-bottom: 2px solid #1a1a1a;
+  padding: 20px 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.03) 10px, rgba(0, 0, 0, 0.03) 20px);
+}
+
+.theme-darkHumor .victory-btn {
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 0;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 #bc2a2a;
+  font-family: var(--font-serif);
+}
+
+.theme-darkHumor .victory-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #bc2a2a;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .header {
