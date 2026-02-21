@@ -418,8 +418,10 @@ body {
 /* Theme Switcher */
 .theme-switch-container {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 40px;
+  justify-content: center;
 }
 
 .theme-btn {
@@ -439,6 +441,25 @@ body {
   color: #fff;
   border-color: var(--accent-primary);
   box-shadow: 0 0 15px var(--accent-primary-glow);
+}
+
+/* Highlight for newly generated AI puzzle cards */
+@keyframes cardHighlight {
+  0% {
+    box-shadow: 0 0 0 3px var(--accent-primary), 0 0 24px var(--accent-primary-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px var(--accent-primary), 0 0 40px var(--accent-primary-glow);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0px transparent;
+  }
+}
+
+.puzzle-card--new {
+  animation: fadeInUp 0.5s ease both, cardHighlight 1.5s ease 0.4s forwards;
 }
 
 /* Puzzle Grid */
@@ -584,6 +605,7 @@ body {
   line-height: 1.8;
   display: -webkit-box;
   -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;

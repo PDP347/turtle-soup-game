@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { puzzles, type Puzzle, type PuzzleTheme, type PuzzleDifficulty, addGeneratedPuzzle, getGeneratedPuzzles } from "@/lib/puzzles";
+import { puzzles, type Puzzle, type PuzzleTheme, type PuzzleDifficulty, addGeneratedPuzzle, getGeneratedPuzzles, THEME_META } from "@/lib/puzzles";
 import { supabase } from "@/lib/supabase";
 
 interface Message {
@@ -14,6 +14,7 @@ export default function HomePage() {
   const router = useRouter();
   const [globalTheme, setGlobalTheme] = useState<PuzzleTheme>("bizarre");
   const [activeThemeFilter, setActiveThemeFilter] = useState<PuzzleTheme | "all">("all");
+  const newPuzzleRef = useRef<HTMLDivElement | null>(null);
   const [allPuzzles, setAllPuzzles] = useState<Puzzle[]>(puzzles);
   const [joinRoomCode, setJoinRoomCode] = useState("");
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
@@ -130,9 +131,10 @@ export default function HomePage() {
 
       const newPuzzle = addGeneratedPuzzle(data.puzzle);
       setAllPuzzles([...puzzles, ...getGeneratedPuzzles()]);
-
-      // Auto enter the new game
-      handleSelect(newPuzzle);
+      // Show the new puzzle in list; reset filter so it's visible
+      setActiveThemeFilter(newPuzzle.theme);
+      // Scroll to new card after render
+      setTimeout(() => newPuzzleRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
     } catch (err) {
       alert("联网搜索失败：" + String(err));
     } finally {
@@ -283,23 +285,39 @@ export default function HomePage() {
               </div>
 
               <div className="theme-switch-container">
-                <button className={`theme-btn ${activeThemeFilter === "all" ? "active" : ""}`} onClick={() => { setActiveThemeFilter("all"); setGlobalTheme("bizarre"); }}>全部分类</button>
-                <button className={`theme-btn ${activeThemeFilter === "bizarre" ? "active" : ""}`} onClick={() => { setActiveThemeFilter("bizarre"); setGlobalTheme("bizarre"); }}>猎奇/惊悚事件</button>
-                <button className={`theme-btn ${activeThemeFilter === "healing" ? "active" : ""}`} onClick={() => { setActiveThemeFilter("healing"); setGlobalTheme("healing"); }}>温馨/疗愈纪实</button>
+                <button
+                  className={`theme-btn ${activeThemeFilter === "all" ? "active" : ""}`}
+                  onClick={() => { setActiveThemeFilter("all"); setGlobalTheme("bizarre"); }}
+                >
+                  🗂️ 全部
+                </button>
+                {(Object.entries(THEME_META) as [PuzzleTheme, typeof THEME_META[PuzzleTheme]][]).map(([key, meta]) => (
+                  <button
+                    key={key}
+                    className={`theme-btn ${activeThemeFilter === key ? "active" : ""}`}
+                    onClick={() => {
+                      setActiveThemeFilter(key);
+                      setGlobalTheme(key === "healing" ? "healing" : "bizarre");
+                    }}
+                  >
+                    {meta.icon} {meta.label}
+                  </button>
+                ))}
               </div>
 
               <div className="puzzle-grid">
                 {filteredPuzzles.map((puzzle, i) => (
                   <div
                     key={puzzle.id}
-                    className="puzzle-card"
+                    ref={puzzle.isGenerated ? newPuzzleRef : null}
+                    className={`puzzle-card${puzzle.isGenerated ? " puzzle-card--new" : ""}`}
                     style={{ animationDelay: `${i * 0.05}s` }}
                     onClick={() => handleSelect(puzzle)}
                     role="button"
                     tabIndex={0}
                   >
                     <div className="card-header">
-                      <h3 className={`card-title ${puzzle.theme === "bizarre" ? "glitch-text" : ""}`}>
+                      <h3 className={`card-title ${puzzle.theme === "bizarre" || puzzle.theme === "suspense" || puzzle.theme === "urbanLegend" || puzzle.theme === "darkHumor" ? "glitch-text" : ""}`}>
                         {puzzle.title}
                         {puzzle.isGenerated && <span style={{ fontSize: 12, marginLeft: 8, opacity: 0.8 }}>🔎 AI网搜</span>}
                       </h3>
@@ -307,7 +325,7 @@ export default function HomePage() {
                         {puzzle.difficulty}
                       </span>
                     </div>
-                    <p className="card-genre">#{puzzle.genre} | {puzzle.theme === "bizarre" ? "猎奇" : "治愈"}</p>
+                    <p className="card-genre">#{puzzle.genre} | {THEME_META[puzzle.theme]?.icon} {THEME_META[puzzle.theme]?.label}</p>
                     <p className="card-surface">{puzzle.surface}</p>
                     <div style={{ flex: 1 }} />
                     <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
