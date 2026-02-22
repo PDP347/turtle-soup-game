@@ -352,10 +352,10 @@ export default function UndercoverRoomPage() {
                         maxLength={10}
                         style={{ background: "var(--uc-bg-color)", border: "1px solid var(--uc-border)", borderRadius: "99px", padding: "14px 20px", color: "var(--uc-text-main)", fontSize: 16, outline: "none", width: "100%", textAlign: "center", boxSizing: "border-box" }}
                     />
-                    <button onClick={handleJoin} disabled={!playerName.trim() || isLoading} style={{ width: "100%", padding: "16px", background: "var(--uc-primary)", color: "white", border: "none", borderRadius: "99px", fontSize: 18, fontWeight: "bold", cursor: "pointer", boxShadow: "0 4px 15px rgba(142,182,155,0.4)" }}>
+                    <button className="primary-action-btn" onClick={handleJoin} disabled={!playerName.trim() || isLoading} style={{ width: "100%", marginBottom: "16px" }}>
                         {isLoading ? "入座中..." : "入局 →"}
                     </button>
-                    <button onClick={() => router.push("/games/undercover")} style={{ background: "none", border: "none", color: "var(--uc-text-muted)", cursor: "pointer", fontSize: 13 }}>
+                    <button className="secondary-action-btn" onClick={() => router.push("/games/undercover")} style={{ width: "100%" }}>
                         ← 返回大厅
                     </button>
                 </div>
@@ -391,7 +391,7 @@ export default function UndercoverRoomPage() {
                         )}
                     </div>
                     {sessionData?.phase === "waiting" && (
-                        <button className="victory-btn" onClick={startGame} disabled={isLoading}>
+                        <button className="primary-action-btn" onClick={startGame} disabled={isLoading}>
                             主持开局 ({sessionData?.players.length} 人)
                         </button>
                     )}
@@ -407,11 +407,10 @@ export default function UndercoverRoomPage() {
                             style={{
                                 width: "100%", maxWidth: "400px",
                                 userSelect: "none", cursor: "pointer",
-                                background: isHoldingWord ? "var(--uc-secondary)" : "var(--uc-card-bg)",
+                                background: isHoldingWord ? "var(--uc-secondary)" : "var(--uc-bg-color)",
                                 color: isHoldingWord ? "#fff" : "var(--uc-text-main)",
-                                padding: "24px 16px", borderRadius: "16px",
-                                border: isHoldingWord ? "none" : "2px dashed var(--uc-border)",
-                                boxShadow: isHoldingWord ? "0 4px 15px rgba(212, 163, 115, 0.4)" : "none",
+                                padding: "24px 16px", borderRadius: "12px",
+                                border: isHoldingWord ? "none" : "1px dashed var(--uc-border)",
                                 textAlign: "center",
                                 transition: "all 0.2s"
                             }}
@@ -429,41 +428,46 @@ export default function UndercoverRoomPage() {
                             )}
                         </div>
                     </div>
-                )}
+                )
+                }
 
                 {/* Voting Panel Overlay */}
-                {sessionData?.phase === "voting" && me?.isAlive && !hasSubmittedVote && (
-                    <div style={{ padding: "20px", background: "var(--uc-card-bg)", borderBottom: "1px solid var(--uc-border)" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", maxWidth: "400px", margin: "0 auto" }}>
-                            <span style={{ color: "var(--uc-accent)", fontWeight: "bold", fontSize: "18px" }}>🩸 关键时刻：你要票出谁？</span>
-                            <select
-                                value={myVote}
-                                onChange={(e) => setMyVote(e.target.value)}
-                                style={{ width: "100%", padding: "12px", background: "var(--uc-bg-color)", color: "var(--uc-text-main)", border: "1px solid var(--uc-border)", borderRadius: "8px", fontSize: "16px" }}
-                            >
-                                <option value="">选择你的怀疑对象...</option>
-                                <option value="skip">🫥 【弃票 / 等等再杀】</option>
-                                {sessionData.players.filter(p => p.isAlive && p.username !== playerName).map(p => (
-                                    <option key={p.username} value={p.username}>投给: {p.username}</option>
-                                ))}
-                            </select>
-                            <button
-                                className="victory-btn"
-                                onClick={() => handleCastVote(false)}
-                                disabled={!myVote || isLoading}
-                                style={{ width: "100%", padding: "12px 16px", fontSize: "16px" }}
-                            >
-                                {isLoading ? "提交中..." : "确认投票 (不可更改)"}
-                            </button>
+                {
+                    sessionData?.phase === "voting" && me?.isAlive && !hasSubmittedVote && (
+                        <div style={{ padding: "20px", background: "var(--uc-card-bg)", borderBottom: "1px solid var(--uc-border)" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", maxWidth: "400px", margin: "0 auto" }}>
+                                <span style={{ color: "var(--uc-accent)", fontWeight: "bold", fontSize: "18px" }}>🩸 关键时刻：你要票出谁？</span>
+                                <select
+                                    value={myVote}
+                                    onChange={(e) => setMyVote(e.target.value)}
+                                    style={{ width: "100%", padding: "12px", background: "var(--uc-bg-color)", color: "var(--uc-text-main)", border: "1px solid var(--uc-border)", borderRadius: "8px", fontSize: "16px" }}
+                                >
+                                    <option value="">选择你的怀疑对象...</option>
+                                    <option value="skip">🫥 【弃票 / 等等再杀】</option>
+                                    {sessionData.players.filter(p => p.isAlive && p.username !== playerName).map(p => (
+                                        <option key={p.username} value={p.username}>投给: {p.username}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    className="primary-action-btn"
+                                    onClick={() => handleCastVote(false)}
+                                    disabled={!myVote || isLoading}
+                                    style={{ width: "100%", marginTop: "12px" }}
+                                >
+                                    {isLoading ? "提交中..." : "确认投票 (不可更改)"}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
-                {sessionData?.phase === "voting" && hasSubmittedVote && (
-                    <div style={{ padding: "20px", textAlign: "center", color: "var(--uc-text-muted)", fontStyle: "italic" }}>
-                        ✅ 已投票完成，正在等待其他人...
-                    </div>
-                )}
+                {
+                    sessionData?.phase === "voting" && hasSubmittedVote && (
+                        <div style={{ padding: "20px", textAlign: "center", color: "var(--uc-text-muted)", fontStyle: "italic" }}>
+                            ✅ 已投票完成，正在等待其他人...
+                        </div>
+                    )
+                }
 
 
                 {/* Player Avatars */}
@@ -492,130 +496,138 @@ export default function UndercoverRoomPage() {
                 </div>
 
                 {/* Party Mode Central UI for Speaking/Discussion */}
-                {isParty && sessionData?.phase !== "waiting" && sessionData?.phase !== "result" && (
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-                        {myTurn ? (
-                            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 20 }}>
-                                <div style={{ fontSize: "60px", animation: "pulse 2s infinite" }}>🎤</div>
-                                <h2 style={{ fontSize: "24px", color: "var(--text-primary)" }}>轮到你发言啦！</h2>
-                                <p style={{ color: "var(--text-muted)" }}>请直接在线下大家面前描述。</p>
-                                <button onClick={handlePartyModeEndTurn} className="victory-btn" disabled={isLoading} style={{ padding: "16px 32px", fontSize: "16px" }}>
-                                    ✅ 发言完毕，移交下一位
-                                </button>
-                            </div>
-                        ) : sessionData?.phase.startsWith("speaking") ? (
-                            <div style={{ textAlign: "center", opacity: 0.6 }}>
-                                <div style={{ fontSize: "40px", marginBottom: 10 }}>👀</div>
-                                <p>请仔细聆听 【{sessionData.players[sessionData.currentSpeakerIndex]?.username}】 的发言...</p>
-                            </div>
-                        ) : sessionData?.phase === "voting" ? (
-                            null // Handled by top panel
-                        ) : sessionData?.phase === "discussion" ? (
-                            <div style={{ textAlign: "center", opacity: 0.8 }}>
-                                <div style={{ fontSize: "40px", marginBottom: 10 }}>💬</div>
-                                <p>自由讨论阶段。<br />大家可以在线下畅说欲言，决定票死谁。</p>
-                                {me?.username === sessionData.players[0]?.username && (
-                                    <button onClick={() => callJudge("end_discussion")} className="back-btn" disabled={isLoading} style={{ marginTop: 24, padding: "12px 24px" }}>
-                                        强制结束讨论，立刻投票 👉
+                {
+                    isParty && sessionData?.phase !== "waiting" && sessionData?.phase !== "result" && (
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                            {myTurn ? (
+                                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 20 }}>
+                                    <div style={{ fontSize: "60px", animation: "pulse 2s infinite" }}>🎤</div>
+                                    <h2 style={{ fontSize: "24px", color: "var(--text-primary)" }}>轮到你发言啦！</h2>
+                                    <p style={{ color: "var(--text-muted)" }}>请直接在线下大家面前描述。</p>
+                                    <button onClick={handlePartyModeEndTurn} className="victory-btn" disabled={isLoading} style={{ padding: "16px 32px", fontSize: "16px" }}>
+                                        ✅ 发言完毕，移交下一位
                                     </button>
-                                )}
-                            </div>
-                        ) : null}
-                    </div>
-                )}
+                                </div>
+                            ) : sessionData?.phase.startsWith("speaking") ? (
+                                <div style={{ textAlign: "center", opacity: 0.6 }}>
+                                    <div style={{ fontSize: "40px", marginBottom: 10 }}>👀</div>
+                                    <p>请仔细聆听 【{sessionData.players[sessionData.currentSpeakerIndex]?.username}】 的发言...</p>
+                                </div>
+                            ) : sessionData?.phase === "voting" ? (
+                                null // Handled by top panel
+                            ) : sessionData?.phase === "discussion" ? (
+                                <div style={{ textAlign: "center", opacity: 0.8 }}>
+                                    <div style={{ fontSize: "40px", marginBottom: 10 }}>💬</div>
+                                    <p>自由讨论阶段。<br />大家可以在线下畅说欲言，决定票死谁。</p>
+                                    {me?.username === sessionData.players[0]?.username && (
+                                        <button onClick={() => callJudge("end_discussion")} className="back-btn" disabled={isLoading} style={{ marginTop: 24, padding: "12px 24px" }}>
+                                            强制结束讨论，立刻投票 👉
+                                        </button>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+                    )
+                }
 
 
                 {/* Result UI for both modes */}
-                {sessionData?.phase === "result" && (
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-                        <div style={{ textAlign: "center", background: "var(--uc-card-bg)", padding: "30px", borderRadius: "24px", border: "1px solid var(--uc-border)", boxShadow: "0 10px 40px rgba(0,0,0,0.05)" }}>
-                            <div style={{ fontSize: "60px", marginBottom: "16px" }}>
-                                {sessionData?.winners === "civilians" ? "🎉" : "😈"}
-                            </div>
-                            <h2 style={{ fontSize: "28px", color: sessionData?.winners === "civilians" ? "var(--uc-primary)" : "var(--uc-accent)", marginBottom: "20px" }}>
-                                {sessionData?.winners === "civilians" ? "平民阵营 胜利！" : "卧底/白板 胜利！"}
-                            </h2>
-                            <p style={{ color: "var(--uc-text-muted)", fontSize: "16px", marginBottom: "30px", lineHeight: "1.6" }}>
-                                平民词：【{sessionData?.civilianWord}】<br />
-                                卧底词：【{sessionData?.undercoverWord}】
-                            </p>
+                {
+                    sessionData?.phase === "result" && (
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                            <div style={{ textAlign: "center", background: "var(--uc-card-bg)", padding: "30px", borderRadius: "24px", border: "1px solid var(--uc-border)", boxShadow: "0 10px 40px rgba(0,0,0,0.05)" }}>
+                                <div style={{ fontSize: "60px", marginBottom: "16px" }}>
+                                    {sessionData?.winners === "civilians" ? "🎉" : "😈"}
+                                </div>
+                                <h2 style={{ fontSize: "28px", color: sessionData?.winners === "civilians" ? "var(--uc-primary)" : "var(--uc-accent)", marginBottom: "20px" }}>
+                                    {sessionData?.winners === "civilians" ? "平民阵营 胜利！" : "卧底/白板 胜利！"}
+                                </h2>
+                                <p style={{ color: "var(--uc-text-muted)", fontSize: "16px", marginBottom: "30px", lineHeight: "1.6" }}>
+                                    平民词：【{sessionData?.civilianWord}】<br />
+                                    卧底词：【{sessionData?.undercoverWord}】
+                                </p>
 
-                            {sessionData.players[0]?.username === playerName ? (
-                                <button className="victory-btn" onClick={startGame} disabled={isLoading} style={{ width: "100%", padding: "16px 32px", fontSize: "18px", borderRadius: "99px", background: "var(--uc-primary)", color: "white", border: "none" }}>
-                                    {isLoading ? "重置中..." : "🔄 再来一局"}
-                                </button>
-                            ) : (
-                                <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>等待房主开启下一局...</p>
-                            )}
+                                {sessionData.players[0]?.username === playerName ? (
+                                    <button className="victory-btn" onClick={startGame} disabled={isLoading} style={{ width: "100%", padding: "16px 32px", fontSize: "18px", borderRadius: "99px", background: "var(--uc-primary)", color: "white", border: "none" }}>
+                                        {isLoading ? "重置中..." : "🔄 再来一局"}
+                                    </button>
+                                ) : (
+                                    <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>等待房主开启下一局...</p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
 
                 {/* Text Mode Chat Records (Hidden in Party Mode mostly, but show System Results so players know what happened) */}
-                {(!isParty || sessionData?.phase === "result" || sessionData?.phase === "waiting") && (
-                    <div className="chat-container" style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-                        {messages.filter(m => !isParty || m.message_type === "system").map((msg, index) => {
-                            const isSystem = msg.message_type === "system";
-                            const isMe = msg.player_name === playerName;
+                {
+                    (!isParty || sessionData?.phase === "result" || sessionData?.phase === "waiting") && (
+                        <div className="chat-container" style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+                            {messages.filter(m => !isParty || m.message_type === "system").map((msg, index) => {
+                                const isSystem = msg.message_type === "system";
+                                const isMe = msg.player_name === playerName;
 
-                            if (isSystem) {
-                                const isJudge = msg.player_name.includes("裁判") || msg.player_name.includes("法官");
+                                if (isSystem) {
+                                    const isJudge = msg.player_name.includes("裁判") || msg.player_name.includes("法官");
+                                    return (
+                                        <div key={index} className="message-row system">
+                                            <div className="chat-bubble">
+                                                {isJudge ? "👨‍⚖️ " : ""}{msg.content}
+                                            </div>
+                                        </div>
+                                    )
+                                }
+
                                 return (
-                                    <div key={index} className="message-row system">
+                                    <div key={index} className={`message - row ${isMe ? 'me' : 'other'} `}>
+                                        <div className="player-label">
+                                            {msg.player_name}
+                                        </div>
                                         <div className="chat-bubble">
-                                            {isJudge ? "👨‍⚖️ " : ""}{msg.content}
+                                            {msg.content}
                                         </div>
                                     </div>
-                                )
-                            }
-
-                            return (
-                                <div key={index} className={`message - row ${isMe ? 'me' : 'other'} `}>
-                                    <div className="player-label">
-                                        {msg.player_name}
-                                    </div>
-                                    <div className="chat-bubble">
-                                        {msg.content}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        <div ref={messagesEndRef} />
-                    </div>
-                )}
+                                );
+                            })}
+                            <div ref={messagesEndRef} />
+                        </div>
+                    )
+                }
 
                 {/* Input Area (Text mode only) */}
-                {(!isParty) && (
-                    <div className="input-area">
-                        <div style={{ position: "relative", display: "flex", gap: 12 }}>
-                            {myTurn && (
-                                <div style={{ position: "absolute", top: -24, left: 16, color: "var(--uc-accent)", fontSize: 12, fontWeight: "bold" }}>
-                                    🔥 轮到你发言了！
+                {
+                    (!isParty) && (
+                        <div className="input-area">
+                            <div style={{ position: "relative", display: "flex", gap: 12 }}>
+                                {myTurn && (
+                                    <div style={{ position: "absolute", top: -24, left: 16, color: "var(--uc-accent)", fontSize: 12, fontWeight: "bold" }}>
+                                        🔥 轮到你发言了！
+                                    </div>
+                                )}
+                                <div className="input-container" style={{ flex: 1, display: "flex" }}>
+                                    <input
+                                        className="chat-input"
+                                        placeholder={sessionData?.phase === "waiting" ? "大家在大厅闲聊..." : myTurn ? "请描述你的词语（不要直接揭底）..." : "等待其他玩家发言..."}
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendTextMode(); } }}
+                                        disabled={sessionData?.phase === "speaking" && !myTurn}
+                                        style={{ border: "none", background: "transparent", outline: "none", width: "100%", padding: "4px" }}
+                                    />
                                 </div>
-                            )}
-                            <div className="input-container" style={{ flex: 1, display: "flex" }}>
-                                <input
-                                    className="chat-input"
-                                    placeholder={sessionData?.phase === "waiting" ? "大家在大厅闲聊..." : myTurn ? "请描述你的词语（不要直接揭底）..." : "等待其他玩家发言..."}
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendTextMode(); } }}
-                                    disabled={sessionData?.phase === "speaking" && !myTurn}
-                                    style={{ border: "none", background: "transparent", outline: "none", width: "100%", padding: "4px" }}
-                                />
+                                <button
+                                    className="send-btn"
+                                    onClick={handleSendTextMode}
+                                    disabled={!input.trim() || (sessionData?.phase === "speaking" && !myTurn)}
+                                >
+                                    ↑
+                                </button>
                             </div>
-                            <button
-                                className="send-btn"
-                                onClick={handleSendTextMode}
-                                disabled={!input.trim() || (sessionData?.phase === "speaking" && !myTurn)}
-                            >
-                                ↑
-                            </button>
                         </div>
-                    </div>
-                )}
-            </main>
-        </div>
+                    )
+                }
+            </main >
+        </div >
     );
 }

@@ -98,7 +98,7 @@ export default function UndercoverLobby() {
                     </p>
 
                     {/* Mode Selection Tabs */}
-                    <div style={{ display: "flex", gap: "10px", marginBottom: "30px", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(10px)", padding: "8px", borderRadius: "16px", border: "1px solid var(--uc-border)", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "30px", background: "var(--uc-card-bg)", padding: "12px", borderRadius: "12px", border: "1px solid var(--uc-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
                         <button
                             onClick={() => setGameMode("text")}
                             className={`game-mode-card ${gameMode === "text" ? "active" : ""}`}
@@ -127,7 +127,7 @@ export default function UndercoverLobby() {
                         </button>
                     </div>
 
-                    <div style={{ width: "100%", maxWidth: "420px", background: "var(--uc-card-bg)", backdropFilter: "blur(10px)", padding: "30px", borderRadius: "32px", border: "1px solid var(--uc-border)", boxShadow: "0 20px 40px rgba(0,0,0,0.05)" }}>
+                    <div style={{ width: "100%", maxWidth: "600px", background: "var(--uc-card-bg)", padding: "40px", borderRadius: "16px", border: "1px solid var(--uc-border)", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
 
                         {/* Configuration specific to modes */}
                         {gameMode === "text" ? (
@@ -158,10 +158,10 @@ export default function UndercoverLobby() {
                         )}
 
                         <button
-                            className="victory-btn"
+                            className="primary-action-btn"
                             onClick={handleCreateRoom}
                             disabled={isCreatingRoom}
-                            style={{ width: "100%", padding: "16px", fontSize: "18px", marginTop: "10px", borderRadius: "99px", background: "var(--uc-primary)", border: "none", color: "white", boxShadow: "0 4px 15px rgba(142, 182, 155, 0.4)" }}
+                            style={{ width: "100%", padding: "16px", fontSize: "18px", marginTop: "20px" }}
                         >
                             {isCreatingRoom ? "房间创建中..." : "⚔️ 创建新房间"}
                         </button>
@@ -184,10 +184,9 @@ export default function UndercoverLobby() {
                                 style={{ flex: 1, background: "var(--uc-bg-color)", border: "1px solid var(--uc-border)", borderRadius: "99px", padding: "14px 20px", color: "var(--uc-text-main)", fontSize: "16px", fontFamily: "var(--font-mono)", outline: "none", textAlign: "center", transition: "all 0.3s" }}
                             />
                             <button
-                                className="back-btn"
+                                className="secondary-action-btn"
                                 onClick={handleJoinRoom}
                                 disabled={joinRoomCode.length !== 4}
-                                style={{ padding: "0 24px" }}
                             >
                                 加入 →
                             </button>
