@@ -522,6 +522,33 @@ export default function UndercoverRoomPage() {
                 )}
 
 
+                {/* Party Mode Result UI */}
+                {isParty && sessionData?.phase === "result" && (
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                        <div style={{ textAlign: "center", background: "var(--bg-card)", padding: "30px", borderRadius: "16px", border: "1px solid var(--border-accent)", boxShadow: "0 0 20px rgba(0,0,0,0.5)" }}>
+                            <div style={{ fontSize: "60px", marginBottom: "16px" }}>
+                                {sessionData?.winners === "civilians" ? "🎉" : "😈"}
+                            </div>
+                            <h2 style={{ fontSize: "28px", color: sessionData?.winners === "civilians" ? "#2ecc71" : "#e74c3c", marginBottom: "20px" }}>
+                                {sessionData?.winners === "civilians" ? "平民阵营 胜利！" : "卧底/白板 胜利！"}
+                            </h2>
+                            <p style={{ color: "var(--text-muted)", fontSize: "16px", marginBottom: "30px", lineHeight: "1.6" }}>
+                                平民词：【{sessionData?.civilianWord}】<br />
+                                卧底词：【{sessionData?.undercoverWord}】
+                            </p>
+
+                            {sessionData.players[0]?.username === playerName ? (
+                                <button className="victory-btn" onClick={startGame} disabled={isLoading} style={{ width: "100%", padding: "16px 32px", fontSize: "18px" }}>
+                                    {isLoading ? "重置中..." : "🔄 再来一局"}
+                                </button>
+                            ) : (
+                                <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>等待房主开启下一局...</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+
                 {/* Text Mode Chat Records (Hidden in Party Mode mostly, but show System Results so players know what happened) */}
                 {(!isParty || sessionData?.phase === "result" || sessionData?.phase === "waiting") && (
                     <div className="chat-container" style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
