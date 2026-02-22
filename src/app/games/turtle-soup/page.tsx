@@ -362,6 +362,31 @@ export default function HomePage() {
                       );
                     })}
                   </div>
+
+                  {/* New: Join Room Entry on Landing Page */}
+                  <div style={{ marginTop: "60px", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: "14px", letterSpacing: "2px", textTransform: "uppercase" }}>— 或者加入已有房间 —</div>
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <input
+                        type="text"
+                        placeholder="4位房间号"
+                        value={joinRoomCode}
+                        onChange={(e) => setJoinRoomCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
+                        maxLength={4}
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-subtle)", borderRadius: "8px", padding: "12px 20px", color: "var(--text-primary)", fontSize: "16px", width: "140px", textAlign: "center", outline: "none", transition: "border-color 0.3s" }}
+                        onFocus={(e) => e.target.style.borderColor = "var(--accent-primary)"}
+                        onBlur={(e) => e.target.style.borderColor = "var(--border-subtle)"}
+                      />
+                      <button
+                        onClick={handleJoinRoom}
+                        disabled={joinRoomCode.length !== 4}
+                        style={{ background: joinRoomCode.length === 4 ? "var(--accent-primary)" : "rgba(255,255,255,0.1)", color: joinRoomCode.length === 4 ? "#000" : "var(--text-muted)", border: "none", borderRadius: "8px", padding: "0 30px", fontSize: "14px", fontWeight: "bold", cursor: joinRoomCode.length === 4 ? "pointer" : "not-allowed", transition: "all 0.3s" }}
+                      >
+                        加入房间
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (

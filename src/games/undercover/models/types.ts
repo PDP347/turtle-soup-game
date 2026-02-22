@@ -25,6 +25,7 @@ export interface UndercoverSession {
     undercoverWord: string;
     winners?: "civilians" | "undercovers";
     isRecordingEnabled?: boolean;
+    speakingEndTime?: number; // timestamp for individual speaking timer
     discussionEndTime?: number; // timestamp for 40s timer
     votingEndTime?: number; // timestamp for 30s voting timer
     tiedPlayers?: string[]; // user IDs of players in PK tiebreaker

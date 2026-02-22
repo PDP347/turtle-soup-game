@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import type { UndercoverSession } from "@/games/undercover/models/types";
+import type { UndercoverSession, UndercoverPlayer, GameMode } from "@/games/undercover/models/types";
+import '../../undercover.css'; // Import the new minimalist UI styles;
 
 interface Message {
     id?: number;
@@ -38,9 +39,9 @@ export default function UndercoverRoomPage() {
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Apply specific theme
+    // Apply undercover minimalist theme to body
     useEffect(() => {
-        document.body.className = "theme-suspense";
+        document.body.className = "undercover-theme";
         return () => { document.body.className = "theme-hub"; };
     }, []);
 
@@ -102,7 +103,6 @@ export default function UndercoverRoomPage() {
 
         channel.subscribe(async (status) => {
             if (status === "SUBSCRIBED") {
-                if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
                 await channel.track({ name, online_at: new Date().toISOString() });
             }
         });
@@ -215,10 +215,24 @@ export default function UndercoverRoomPage() {
                 }
             }, 1000);
             return () => clearInterval(interval);
-        } else {
+        } else if (sessionData?.phase.startsWith("speaking") && sessionData.speakingEndTime) {
+            const interval = setInterval(() => {
+                const remaining = Math.max(0, Math.floor((sessionData.speakingEndTime! - Date.now()) / 1000));
+                setTimeLeft(remaining);
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    // Only the current speaker triggers timeout
+                    if (sessionData.players[sessionData.currentSpeakerIndex]?.username === playerName) {
+                        callJudge("player_speak", "发言超时");
+                    }
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+        else {
             setTimeLeft(null);
         }
-    }, [sessionData?.phase, sessionData?.discussionEndTime, sessionData?.votingEndTime, playerName, hasSubmittedVote]);
+    }, [sessionData?.phase, sessionData?.discussionEndTime, sessionData?.votingEndTime, sessionData?.speakingEndTime, sessionData?.currentSpeakerIndex, playerName, hasSubmittedVote]);
 
     // AI/StateMachine Dispatcher
     const callJudge = useCallback(async (
@@ -321,14 +335,14 @@ export default function UndercoverRoomPage() {
     // --- Render Join Screen ---
     if (!hasJoined) {
         return (
-            <div className="app-layout" style={{ justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
-                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-lg)", padding: "48px 40px", maxWidth: 400, width: "100%", boxShadow: "var(--shadow-deep)", display: "flex", flexDirection: "column", gap: 24, zIndex: 10 }}>
-                    <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", textAlign: "center", lineHeight: 1.4 }}>
+            <div className="undercover-theme" style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <div style={{ background: "var(--uc-card-bg)", border: "1px solid var(--uc-border)", borderRadius: "24px", padding: "48px 40px", maxWidth: 400, width: "100%", boxShadow: "0 10px 40px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", gap: 24 }}>
+                    <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--uc-text-main)", textAlign: "center", lineHeight: 1.4 }}>
                         🕵️ 加入谁是卧底
                         <br />
-                        <span style={{ fontSize: 18, color: "var(--accent-primary)" }}>房间 #{roomId}</span>
+                        <span style={{ fontSize: 18, color: "var(--uc-primary)" }}>房间 #{roomId}</span>
                     </h2>
-                    {error && <p style={{ color: "#e74c3c", fontSize: 14, textAlign: "center" }}>{error}</p>}
+                    {error && <p style={{ color: "var(--uc-accent)", fontSize: 14, textAlign: "center" }}>{error}</p>}
                     <input
                         type="text"
                         placeholder="输入你的代号"
@@ -336,12 +350,12 @@ export default function UndercoverRoomPage() {
                         onChange={(e) => setPlayerName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") handleJoin(); }}
                         maxLength={10}
-                        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "14px 16px", color: "var(--text-primary)", fontSize: 16, fontFamily: "var(--font-serif)", outline: "none", width: "100%", textAlign: "center" }}
+                        style={{ background: "var(--uc-bg-color)", border: "1px solid var(--uc-border)", borderRadius: "99px", padding: "14px 20px", color: "var(--uc-text-main)", fontSize: 16, outline: "none", width: "100%", textAlign: "center", boxSizing: "border-box" }}
                     />
-                    <button className="victory-btn" onClick={handleJoin} disabled={!playerName.trim() || isLoading} style={{ width: "100%" }}>
+                    <button onClick={handleJoin} disabled={!playerName.trim() || isLoading} style={{ width: "100%", padding: "16px", background: "var(--uc-primary)", color: "white", border: "none", borderRadius: "99px", fontSize: 18, fontWeight: "bold", cursor: "pointer", boxShadow: "0 4px 15px rgba(142,182,155,0.4)" }}>
                         {isLoading ? "入座中..." : "入局 →"}
                     </button>
-                    <button onClick={() => router.push("/games/undercover")} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 13, fontFamily: "var(--font-mono)" }}>
+                    <button onClick={() => router.push("/games/undercover")} style={{ background: "none", border: "none", color: "var(--uc-text-muted)", cursor: "pointer", fontSize: 13 }}>
                         ← 返回大厅
                     </button>
                 </div>
@@ -357,36 +371,27 @@ export default function UndercoverRoomPage() {
     const isParty = sessionData?.gameMode === "party";
 
     return (
-        <div className="app-layout">
-            <header className="header" style={{ borderBottom: "1px solid var(--border-accent)" }}>
-                <span className="header-icon">🕵️</span>
-                <h1 className="header-title">谁是卧底 {isParty && <span style={{ fontSize: "12px", color: "var(--accent-primary)", border: "1px solid var(--accent-primary)", padding: "2px 6px", borderRadius: "4px", marginLeft: "10px" }}>聚会版</span>}</h1>
-                <div style={{ display: "flex", gap: 12, alignItems: "center", marginLeft: "auto", marginRight: 16 }}>
-                    <span style={{ fontSize: 14, color: "var(--text-muted)" }}>房间 {roomId}</span>
-                    <button onClick={() => router.push("/games/undercover")} className="back-btn" style={{ fontSize: 12 }}>离开</button>
-                </div>
-            </header>
-
-            <main className="game-area" style={{ flex: 1, display: "flex", flexDirection: "column", height: "calc(100vh - 80px)", overflow: "hidden" }}>
-
-                {/* Visual Status Bar */}
-                <div style={{ padding: "16px", background: "var(--bg-surface)", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+        <div className="undercover-theme" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start" }}>
+            <main className="main-container">
+                {/* Status Header */}
+                <div className="status-header">
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>谁是卧底 · 房间号 {roomId} {isParty ? "🎉 聚会版" : "💬 在线版"}</div>
+                        <div style={{ fontSize: 18, fontWeight: 700 }}>
                             {sessionData?.phase === "waiting" ? "等待大家加入..." :
                                 sessionData?.phase === "speaking" ? `第 ${sessionData?.roundCount} 轮: 顺序发言` :
                                     sessionData?.phase === "speaking_pk" ? `⚔️ 决最后战: PK 追加发言！` :
-                                        sessionData?.phase === "discussion" ? `自由讨论阶段: 还剩 ${timeLeft} 秒` :
-                                            sessionData?.phase === "voting" ? `投票阶段: 抓出内鬼！ ${timeLeft ? `(${timeLeft}s)` : ""}` : "游戏结束"}
+                                        sessionData?.phase === "discussion" ? `自由讨论阶段` :
+                                            sessionData?.phase === "voting" ? `投票阶段: 抓出内鬼！` : "游戏结束"}
                         </div>
-                        {(!isParty && me?.keyword) && (
-                            <div style={{ fontSize: 14, color: "var(--accent-primary)", marginTop: 4, fontFamily: "var(--font-mono)" }}>
-                                我的词语: 【{me.keyword}】
+                        {(sessionData?.phase === "speaking" || sessionData?.phase === "discussion" || sessionData?.phase === "voting") && timeLeft !== null && (
+                            <div className="timer-badge">
+                                倒计时: {timeLeft}s
                             </div>
                         )}
                     </div>
                     {sessionData?.phase === "waiting" && (
-                        <button className="victory-btn" style={{ padding: "8px 16px", fontSize: 14 }} onClick={startGame} disabled={isLoading}>
+                        <button className="victory-btn" onClick={startGame} disabled={isLoading}>
                             主持开局 ({sessionData?.players.length} 人)
                         </button>
                     )}
@@ -394,7 +399,7 @@ export default function UndercoverRoomPage() {
 
                 {/* HOLD TO VIEW CARD (Only in Party Mode when playing) */}
                 {isParty && sessionData?.phase !== "waiting" && sessionData?.phase !== "result" && (
-                    <div style={{ padding: "20px", background: "var(--bg-card)", display: "flex", justifyContent: "center", borderBottom: "1px solid var(--border-subtle)" }}>
+                    <div style={{ padding: "20px", display: "flex", justifyContent: "center", borderBottom: "1px solid var(--uc-border)" }}>
                         <div
                             onPointerDown={() => setIsHoldingWord(true)}
                             onPointerUp={() => setIsHoldingWord(false)}
@@ -402,22 +407,24 @@ export default function UndercoverRoomPage() {
                             style={{
                                 width: "100%", maxWidth: "400px",
                                 userSelect: "none", cursor: "pointer",
-                                background: isHoldingWord ? "var(--bg-surface)" : "transparent",
-                                padding: "24px 16px", borderRadius: "12px",
-                                border: isHoldingWord ? "1px solid var(--accent-primary)" : "1px dashed var(--border-muted)",
+                                background: isHoldingWord ? "var(--uc-secondary)" : "var(--uc-card-bg)",
+                                color: isHoldingWord ? "#fff" : "var(--uc-text-main)",
+                                padding: "24px 16px", borderRadius: "16px",
+                                border: isHoldingWord ? "none" : "2px dashed var(--uc-border)",
+                                boxShadow: isHoldingWord ? "0 4px 15px rgba(212, 163, 115, 0.4)" : "none",
                                 textAlign: "center",
                                 transition: "all 0.2s"
                             }}
                         >
                             {!me?.isAlive ? (
-                                <span style={{ color: "var(--text-muted)", fontSize: "16px" }}>你已出局。</span>
+                                <span style={{ opacity: 0.7, fontSize: "16px" }}>你已出局。</span>
                             ) : isHoldingWord ? (
-                                <div style={{ fontSize: "18px", color: "var(--text-primary)", fontWeight: "bold" }}>
+                                <div style={{ fontSize: "18px", fontWeight: "bold" }}>
                                     {me?.role === "mr_white" ? "你是【白板】！请根据别人的描述伪装自己。" : `你的词语是：【${me?.keyword}】`}
                                 </div>
                             ) : (
-                                <span style={{ color: "var(--text-muted)", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                                    🔒 <span>按住查看你的身份与词语<br /><small>(请防偷看)</small></span>
+                                <span style={{ opacity: 0.6, fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                                    🔒 <span>按住查看你的身份与词语<br /><small style={{ fontSize: "12px", marginTop: "4px", display: "block" }}>(防偷看)</small></span>
                                 </span>
                             )}
                         </div>
@@ -426,13 +433,13 @@ export default function UndercoverRoomPage() {
 
                 {/* Voting Panel Overlay */}
                 {sessionData?.phase === "voting" && me?.isAlive && !hasSubmittedVote && (
-                    <div style={{ padding: "20px", background: "rgba(231, 76, 60, 0.1)", borderBottom: "1px solid rgba(231, 76, 60, 0.3)" }}>
+                    <div style={{ padding: "20px", background: "var(--uc-card-bg)", borderBottom: "1px solid var(--uc-border)" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", maxWidth: "400px", margin: "0 auto" }}>
-                            <span style={{ color: "#e74c3c", fontWeight: "bold", fontSize: "18px" }}>🩸 关键时刻：你要票出谁？</span>
+                            <span style={{ color: "var(--uc-accent)", fontWeight: "bold", fontSize: "18px" }}>🩸 关键时刻：你要票出谁？</span>
                             <select
                                 value={myVote}
                                 onChange={(e) => setMyVote(e.target.value)}
-                                style={{ width: "100%", padding: "12px", background: "var(--bg-card)", color: "#fff", border: "1px solid var(--border-accent)", borderRadius: "8px", fontSize: "16px" }}
+                                style={{ width: "100%", padding: "12px", background: "var(--uc-bg-color)", color: "var(--uc-text-main)", border: "1px solid var(--uc-border)", borderRadius: "8px", fontSize: "16px" }}
                             >
                                 <option value="">选择你的怀疑对象...</option>
                                 <option value="skip">🫥 【弃票 / 等等再杀】</option>
@@ -453,39 +460,35 @@ export default function UndercoverRoomPage() {
                 )}
 
                 {sessionData?.phase === "voting" && hasSubmittedVote && (
-                    <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                    <div style={{ padding: "20px", textAlign: "center", color: "var(--uc-text-muted)", fontStyle: "italic" }}>
                         ✅ 已投票完成，正在等待其他人...
                     </div>
                 )}
 
 
                 {/* Player Avatars */}
-                <div style={{ display: "flex", gap: 12, padding: "16px", overflowX: "auto", background: "rgba(0,0,0,0.2)" }}>
-                    {sessionData?.players.map((p, i) => {
-                        const isSpeakingNow = sessionData?.currentSpeakerIndex === i && sessionData?.phase.startsWith("speaking");
-                        return (
-                            <div key={i} style={{
-                                display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-                                opacity: p.isAlive ? 1 : 0.4
-                            }}>
-                                <div style={{
-                                    width: 48, height: 48, borderRadius: "50%",
-                                    background: isSpeakingNow ? "var(--accent-primary)" : "var(--bg-card)",
-                                    border: isSpeakingNow ? "none" : "2px solid var(--border-subtle)",
-                                    color: isSpeakingNow ? "#000" : "var(--text-primary)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 18, fontWeight: 700,
-                                    boxShadow: isSpeakingNow ? "0 0 15px var(--accent-primary)" : "none",
-                                    transition: "all 0.3s"
-                                }}>
-                                    {i + 1}
-                                </div>
-                                <span style={{ fontSize: 12, color: isSpeakingNow ? "var(--accent-primary)" : "var(--text-muted)", fontFamily: "var(--font-mono)", maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {p.username}{!p.isAlive && " (出局)"}
-                                </span>
+                <div style={{ display: "flex", gap: 12, padding: "16px", overflowX: "auto", borderBottom: "1px solid var(--uc-border)", background: "var(--uc-card-bg)" }}>
+                    {sessionData?.players.map((p, i) => (
+                        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                            <div
+                                className="player-avatar"
+                                style={{
+                                    width: 60, height: 60, borderRadius: "50%", background: p.isAlive ? "var(--uc-bg-color)" : "#eee",
+                                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: "bold",
+                                    color: p.isAlive ? (i % 2 === 0 ? "var(--uc-primary)" : "var(--uc-secondary)") : "#bbb",
+                                    border: p.isAlive ? `3px solid ${i % 2 === 0 ? "var(--uc-primary)" : "var(--uc-secondary)"}` : "3px solid #ddd",
+                                    opacity: p.isAlive ? 1 : 0.6,
+                                    position: "relative"
+                                }}
+                            >
+                                {p.username.slice(0, 1).toUpperCase()}
+                                {!p.isAlive && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30 }}>❌</div>}
                             </div>
-                        )
-                    })}
+                            <div style={{ fontSize: 12, color: "var(--uc-text-muted)", maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {p.username}
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Party Mode Central UI for Speaking/Discussion */}
@@ -525,20 +528,20 @@ export default function UndercoverRoomPage() {
                 {/* Result UI for both modes */}
                 {sessionData?.phase === "result" && (
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-                        <div style={{ textAlign: "center", background: "var(--bg-card)", padding: "30px", borderRadius: "16px", border: "1px solid var(--border-accent)", boxShadow: "0 0 20px rgba(0,0,0,0.5)" }}>
+                        <div style={{ textAlign: "center", background: "var(--uc-card-bg)", padding: "30px", borderRadius: "24px", border: "1px solid var(--uc-border)", boxShadow: "0 10px 40px rgba(0,0,0,0.05)" }}>
                             <div style={{ fontSize: "60px", marginBottom: "16px" }}>
                                 {sessionData?.winners === "civilians" ? "🎉" : "😈"}
                             </div>
-                            <h2 style={{ fontSize: "28px", color: sessionData?.winners === "civilians" ? "#2ecc71" : "#e74c3c", marginBottom: "20px" }}>
+                            <h2 style={{ fontSize: "28px", color: sessionData?.winners === "civilians" ? "var(--uc-primary)" : "var(--uc-accent)", marginBottom: "20px" }}>
                                 {sessionData?.winners === "civilians" ? "平民阵营 胜利！" : "卧底/白板 胜利！"}
                             </h2>
-                            <p style={{ color: "var(--text-muted)", fontSize: "16px", marginBottom: "30px", lineHeight: "1.6" }}>
+                            <p style={{ color: "var(--uc-text-muted)", fontSize: "16px", marginBottom: "30px", lineHeight: "1.6" }}>
                                 平民词：【{sessionData?.civilianWord}】<br />
                                 卧底词：【{sessionData?.undercoverWord}】
                             </p>
 
                             {sessionData.players[0]?.username === playerName ? (
-                                <button className="victory-btn" onClick={startGame} disabled={isLoading} style={{ width: "100%", padding: "16px 32px", fontSize: "18px" }}>
+                                <button className="victory-btn" onClick={startGame} disabled={isLoading} style={{ width: "100%", padding: "16px 32px", fontSize: "18px", borderRadius: "99px", background: "var(--uc-primary)", color: "white", border: "none" }}>
                                     {isLoading ? "重置中..." : "🔄 再来一局"}
                                 </button>
                             ) : (
@@ -559,27 +562,20 @@ export default function UndercoverRoomPage() {
                             if (isSystem) {
                                 const isJudge = msg.player_name.includes("裁判") || msg.player_name.includes("法官");
                                 return (
-                                    <div key={index} style={{ textAlign: "center", margin: "16px 0" }}>
-                                        <span style={{
-                                            background: isJudge ? "rgba(155, 89, 182, 0.15)" : "rgba(255,255,255,0.1)",
-                                            color: isJudge ? "#d2b4de" : "var(--text-muted)",
-                                            padding: "8px 16px", borderRadius: 20, fontSize: 14, fontFamily: "var(--font-mono)",
-                                            border: isJudge ? "1px solid rgba(155, 89, 182, 0.3)" : "none",
-                                            display: "inline-block", maxWidth: "90%", wordBreak: "break-word",
-                                            whiteSpace: "pre-wrap"
-                                        }}>
-                                            {msg.content}
-                                        </span>
+                                    <div key={index} className="message-row system">
+                                        <div className="chat-bubble">
+                                            {isJudge ? "👨‍⚖️ " : ""}{msg.content}
+                                        </div>
                                     </div>
                                 )
                             }
 
                             return (
-                                <div key={index} className={`message-row ${msg.is_ai ? "assistant" : isMe ? "user" : "assistant"}`} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", marginBottom: 16 }}>
-                                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4, padding: "0 4px", fontFamily: "var(--font-mono)" }}>
+                                <div key={index} className={`message - row ${isMe ? 'me' : 'other'} `}>
+                                    <div className="player-label">
                                         {msg.player_name}
                                     </div>
-                                    <div className={`bubble ${msg.is_ai ? "assistant" : isMe ? "user" : "assistant"}`} style={{ padding: "10px 16px", borderRadius: "12px", maxWidth: "80%", wordBreak: "break-word" }}>
+                                    <div className="chat-bubble">
                                         {msg.content}
                                     </div>
                                 </div>
@@ -591,30 +587,30 @@ export default function UndercoverRoomPage() {
 
                 {/* Input Area (Text mode only) */}
                 {(!isParty) && (
-                    <div className="input-area" style={{ background: "var(--bg-surface)", borderTop: "1px solid var(--border-subtle)", padding: "16px" }}>
-                        <div className="input-wrapper" style={{ display: "flex", gap: 12 }}>
+                    <div className="input-area">
+                        <div style={{ position: "relative", display: "flex", gap: 12 }}>
                             {myTurn && (
-                                <div style={{ position: "absolute", top: -30, left: 16, color: "var(--accent-primary)", fontSize: 12, fontWeight: "bold", fontFamily: "var(--font-mono)" }}>
+                                <div style={{ position: "absolute", top: -24, left: 16, color: "var(--uc-accent)", fontSize: 12, fontWeight: "bold" }}>
                                     🔥 轮到你发言了！
                                 </div>
                             )}
-                            <textarea
-                                className="input-field"
-                                placeholder={sessionData?.phase === "waiting" ? "大家在大厅闲聊..." : myTurn ? "请描述你的词语（不要直接说出词）..." : "等待其他玩家发言..."}
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendTextMode(); } }}
-                                rows={1}
-                                style={{ flex: 1, resize: "none", background: "var(--bg-card)" }}
-                                disabled={sessionData?.phase === "speaking" && !myTurn}
-                            />
+                            <div className="input-container" style={{ flex: 1, display: "flex" }}>
+                                <input
+                                    className="chat-input"
+                                    placeholder={sessionData?.phase === "waiting" ? "大家在大厅闲聊..." : myTurn ? "请描述你的词语（不要直接揭底）..." : "等待其他玩家发言..."}
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendTextMode(); } }}
+                                    disabled={sessionData?.phase === "speaking" && !myTurn}
+                                    style={{ border: "none", background: "transparent", outline: "none", width: "100%", padding: "4px" }}
+                                />
+                            </div>
                             <button
                                 className="send-btn"
                                 onClick={handleSendTextMode}
                                 disabled={!input.trim() || (sessionData?.phase === "speaking" && !myTurn)}
-                                style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--accent-primary)", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}
                             >
-                                ↗
+                                ↑
                             </button>
                         </div>
                     </div>
