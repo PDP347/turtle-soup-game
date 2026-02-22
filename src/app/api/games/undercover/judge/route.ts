@@ -279,8 +279,25 @@ export async function POST(req: Request) {
             const badGuysCount = aliveUndercovers + aliveMrWhites;
 
             if (badGuysCount === 0) {
+                let aiCommentary = "";
+                try {
+                    const client = new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY, baseURL: "https://api.deepseek.com" });
+                    const res = await client.chat.completions.create({
+                        model: "deepseek-chat",
+                        messages: [{
+                            role: "system",
+                            content: `你是一个毒舌又幽默的《谁是卧底》法官。游戏刚刚结束，平民阵营胜利。被票出局的人是 ${eliminated}（身份：${roleStr}）。本局平民词：${sessionData.civilianWord}，卧底词：${sessionData.undercoverWord}。请用一两句话犀利地点评这局游戏，或嘲笑一下出局的卧底/白板。不要有开场白，直接给出吐槽。`
+                        }],
+                        temperature: 1.0,
+                        max_tokens: 50
+                    });
+                    aiCommentary = res.choices[0].message.content || "";
+                } catch (e) {
+                    console.error("AI commentary failed:", e);
+                }
+
                 return NextResponse.json({
-                    systemMessage: `🗡️ ${eliminated} 被无情票出，身份是：【${roleStr}】！\n\n🎉 反面阵营已全灭，【平民阵营胜利】！游戏结束。`,
+                    systemMessage: `🗡️ ${eliminated} 被无情票出，身份是：【${roleStr}】！\n\n🎉 反面阵营已全灭，【平民阵营胜利】！游戏结束。${aiCommentary ? `\n\n🤖 法官锐评：${aiCommentary}` : ""}`,
                     updatedSession: {
                         ...sessionData,
                         phase: "result",
@@ -289,8 +306,25 @@ export async function POST(req: Request) {
                     }
                 });
             } else if (badGuysCount >= aliveCivilians) {
+                let aiCommentary = "";
+                try {
+                    const client = new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY, baseURL: "https://api.deepseek.com" });
+                    const res = await client.chat.completions.create({
+                        model: "deepseek-chat",
+                        messages: [{
+                            role: "system",
+                            content: `你是一个毒舌又幽默的《谁是卧底》法官。游戏刚刚结束，反派阵营（卧底/白板）胜利。被票出局的人是 ${eliminated}（身份：${roleStr}）。本局平民词：${sessionData.civilianWord}，卧底词：${sessionData.undercoverWord}。请用一两句话犀利地点评这局游戏，嘲笑一下愚蠢的平民，或者赞赏一下反派的演技。不要有开场白，直接给出吐槽。`
+                        }],
+                        temperature: 1.0,
+                        max_tokens: 50
+                    });
+                    aiCommentary = res.choices[0].message.content || "";
+                } catch (e) {
+                    console.error("AI commentary failed:", e);
+                }
+
                 return NextResponse.json({
-                    systemMessage: `🗡️ ${eliminated} 被无情票出，竟然是：【${roleStr}】！\n\n😈 目前卧底及白板存活人数已占优，【反面阵营胜利】！游戏结束。`,
+                    systemMessage: `🗡️ ${eliminated} 被无情票出，竟然是：【${roleStr}】！\n\n😈 目前卧底及白板存活人数已占优，【反面阵营胜利】！游戏结束。${aiCommentary ? `\n\n🤖 法官锐评：${aiCommentary}` : ""}`,
                     updatedSession: {
                         ...sessionData,
                         phase: "result",
@@ -301,12 +335,29 @@ export async function POST(req: Request) {
             } else {
                 players.forEach(p => { p.hasSpoken = false; p.voteCount = 0; });
 
+                let aiCommentary = "";
+                try {
+                    const client = new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY, baseURL: "https://api.deepseek.com" });
+                    const res = await client.chat.completions.create({
+                        model: "deepseek-chat",
+                        messages: [{
+                            role: "system",
+                            content: `你是一个毒舌又幽默的《谁是卧底》游戏法官。目前游戏第一轮或中途投票已结束，玩家 ${eliminated}（身份：${roleStr}）被票决出局。游戏仍在继续。本局平民词：${sessionData.civilianWord}，卧底词：${sessionData.undercoverWord}。这是你的串场台词，请用一句犀利毒舌的话点评一下刚才出局的人，并挑拨离间一下剩下的存活者。语句要简短，不超过两句话，不要任何开头。`
+                        }],
+                        temperature: 1.0,
+                        max_tokens: 50
+                    });
+                    aiCommentary = res.choices[0].message.content || "";
+                } catch (e) {
+                    console.error("AI commentary failed:", e);
+                }
+
                 // Try randomly selecting the next speaker to shake things up
                 const aliveList = players.map((p, i) => ({ alive: p.isAlive, idx: i })).filter(item => item.alive);
                 const nextSpeaker = aliveList[Math.floor(Math.random() * aliveList.length)].idx;
 
                 return NextResponse.json({
-                    systemMessage: `🗡️ ${eliminated} 出局，真实身份是：【${roleStr}】！\n游戏继续，第 ${sessionData.roundCount + 1} 轮发言将从【${players[nextSpeaker].username}】开始！`,
+                    systemMessage: `🗡️ ${eliminated} 出局，真实身份是：【${roleStr}】！\n${aiCommentary ? `\n🤖 法官锐评：${aiCommentary}\n` : ""}\n游戏继续，第 ${sessionData.roundCount + 1} 轮发言将从【${players[nextSpeaker].username}】开始！`,
                     updatedSession: {
                         ...sessionData,
                         phase: "speaking",
