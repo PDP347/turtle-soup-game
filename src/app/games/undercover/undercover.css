@@ -1,86 +1,89 @@
 /* 
   undercover.css 
-  Classic Web-Friendly Clean Mode.
+  Borderless Zen Mode - Flowing, Natural, Containerless UI.
 */
 
 .undercover-theme {
     /* --- Base Variables --- */
     --uc-bg-color: #F8F6F0;
-    --uc-card-bg: #FFFFFF;
+    /* Soft warm beige */
     --uc-text-main: #2C3E50;
-    --uc-text-muted: #7F8C8D;
-    --uc-border: #EAE6DF;
+    --uc-text-muted: #8E9B9C;
+    /* Softer gray */
+    --uc-border: rgba(234, 230, 223, 0.6);
+    /* Very faint border if absolutely needed */
 
     /* --- Brand Colors --- */
     --uc-primary: #8EB69B;
+    /* Sage Green */
     --uc-primary-light: #A5C9B1;
     --uc-secondary: #D4A373;
+    /* Warm Sand */
     --uc-accent: #E07A5F;
-    --uc-accent-light: #E68E77;
 
     /* --- Chat Bubble Colors --- */
     --uc-bubble-me: var(--uc-primary);
     --uc-bubble-me-text: #FFFFFF;
-    --uc-bubble-other: #F4F6F6;
-    --uc-bubble-other-text: #2C3E50;
-    --uc-bubble-sys-text: #95A5A6;
+    --uc-bubble-other: transparent;
+    /* Zen floating text for others */
+    --uc-bubble-other-text: var(--uc-text-main);
+    --uc-bubble-sys-text: #AAB7B8;
 
     /* --- Global Styles --- */
     background-color: var(--uc-bg-color) !important;
     background-image: none !important;
-    /* Clean flat background */
     color: var(--uc-text-main) !important;
     font-family: 'Inter', -apple-system, system-ui, sans-serif !important;
     min-height: 100vh;
 }
 
-/* --- 2. Main Container (Flat & Wide) --- */
+/* --- 2. Main Container (Borderless & Floating) --- */
 .undercover-theme .main-container {
-    background: var(--uc-card-bg) !important;
-    border-radius: 16px !important;
-    /* Softer, less dramatic curves */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
-    /* Clean, subtle shadow */
-    border: 1px solid var(--uc-border) !important;
+    background: transparent !important;
+    /* NO white card background */
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
     max-width: 900px !important;
-    /* Much wider for Web */
     width: 100% !important;
-    margin: 40px auto !important;
-    overflow: hidden !important;
+    margin: 20px auto !important;
+    overflow: visible !important;
+    /* Allow elements to float freely */
     display: flex;
     flex-direction: column;
 }
 
 /* --- 3. Chat Area & Bubbles --- */
 .undercover-theme .chat-container {
-    padding: 32px 40px !important;
-    /* More breathing room */
+    padding: 30px 20px !important;
+    gap: 16px !important;
+    /* Slightly more space between messages */
 }
 
 .undercover-theme .chat-bubble {
-    max-width: 75%;
-    padding: 12px 18px !important;
-    border-radius: 12px !important;
-    /* Classic chat bubble shape */
-    font-size: 15px !important;
-    line-height: 1.6 !important;
+    max-width: 80%;
+    padding: 10px 16px !important;
+    border-radius: 20px !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
     box-shadow: none !important;
-    /* Flat design */
+    border: none !important;
 }
 
-/* My Bubble */
+/* My Bubble (Distinctive Sage Green Pill) */
 .undercover-theme .message-row.me .chat-bubble {
     background: var(--uc-bubble-me) !important;
     color: var(--uc-bubble-me-text) !important;
-    border-bottom-right-radius: 2px !important;
+    border-bottom-right-radius: 4px !important;
 }
 
-/* Other Bubble */
+/* Other Bubble (Barely there, floating text) */
 .undercover-theme .message-row.other .chat-bubble {
-    background: var(--uc-bubble-other) !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    /* Very subtle frosting */
     color: var(--uc-bubble-other-text) !important;
-    border-bottom-left-radius: 2px !important;
-    border: 1px solid var(--uc-border) !important;
+    border-bottom-left-radius: 4px !important;
+    border: none !important;
 }
 
 /* System Messages */
@@ -90,78 +93,82 @@
     color: var(--uc-bubble-sys-text) !important;
     font-size: 13px !important;
     font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* --- 4. Interactive Elements --- */
+/* --- 4. Interactive Elements (Input Area) --- */
 .undercover-theme .input-container {
-    background: var(--uc-bg-color) !important;
-    border-radius: 8px !important;
-    /* Rounded rectangle instead of pill */
-    padding: 12px 16px !important;
-    border: 1px solid var(--uc-border) !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 16px 20px !important;
+    border: none !important;
+    border-top: 1px solid var(--uc-border) !important;
+    /* Just a delicate parting line */
     box-shadow: none !important;
+    margin-top: auto;
 }
 
-.undercover-theme .input-container:focus-within {
-    border-color: var(--uc-primary) !important;
+.undercover-theme .input-container input {
+    background: rgba(255, 255, 255, 0.6) !important;
+    /* Slight distinction for input field */
+    border: 1px solid transparent !important;
+    border-radius: 99px !important;
+    padding: 14px 24px !important;
+    transition: all 0.3s;
+}
+
+.undercover-theme .input-container input:focus {
+    background: #FFFFFF !important;
+    border-color: var(--uc-primary-light) !important;
+    box-shadow: 0 4px 15px rgba(142, 182, 155, 0.1) !important;
 }
 
 .undercover-theme .send-btn {
-    background: var(--uc-primary) !important;
-    color: white !important;
-    border-radius: 8px !important;
-    /* Rounded rectangle */
-    transition: background-color 0.2s !important;
+    background: transparent !important;
+    color: var(--uc-primary) !important;
+    border-radius: 50% !important;
+    /* Make it a clean circular icon feel */
+    min-width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px !important;
+    transition: all 0.2s !important;
+    border: 1px solid var(--uc-primary) !important;
 }
 
 .undercover-theme .send-btn:hover:not(:disabled) {
-    background: var(--uc-primary-light) !important;
-    transform: none !important;
-    /* Remove dramatic rotation */
-    box-shadow: none !important;
+    background: var(--uc-primary) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(142, 182, 155, 0.2) !important;
 }
 
 .undercover-theme .timer-badge {
     animation: none !important;
-    /* No pulsing */
-    background: var(--uc-secondary) !important;
-    color: white !important;
-    border-radius: 4px !important;
-    padding: 4px 10px !important;
+    background: transparent !important;
+    color: var(--uc-secondary) !important;
+    border-radius: 99px !important;
+    padding: 4px 12px !important;
     font-size: 14px !important;
+    border: 1px solid var(--uc-secondary) !important;
+    font-weight: 500 !important;
 }
 
-/* --- 5. Clean Components --- */
+/* --- 5. Clean Components (Avatars) --- */
 .undercover-theme .player-avatar {
-    border: 2px solid var(--uc-border);
+    border: none !important;
     box-shadow: none !important;
-    /* Flat */
-    transition: border-color 0.2s;
+    transition: transform 0.2s;
+    background: rgba(255, 255, 255, 0.6) !important;
+    /* Soft backdrop for avatar */
 }
 
 .undercover-theme .player-avatar:hover {
-    transform: none !important;
-    /* No popping up */
-    border-color: var(--uc-primary) !important;
-}
-
-/* Lobby Polish */
-.undercover-theme .game-mode-card {
-    transition: background-color 0.2s, border-color 0.2s;
-    cursor: pointer;
-    border: 1px solid var(--uc-border) !important;
-    box-shadow: none !important;
-}
-
-.undercover-theme .game-mode-card:hover {
-    transform: none !important;
-    background-color: var(--uc-bg-color) !important;
-}
-
-.undercover-theme .game-mode-card.active {
-    background: var(--uc-primary) !important;
-    color: white !important;
-    border-color: var(--uc-primary) !important;
+    transform: translateY(-3px) !important;
 }
 
 /* Thematic Buttons Reset */
@@ -169,36 +176,62 @@
     background: var(--uc-primary) !important;
     color: white !important;
     border: none !important;
-    padding: 12px 24px !important;
-    border-radius: 8px !important;
+    padding: 14px 28px !important;
+    border-radius: 99px !important;
+    /* Pill shape is softer for zen */
     font-size: 16px !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(142, 182, 155, 0.2) !important;
 }
 
 .undercover-theme .primary-action-btn:hover:not(:disabled) {
-    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(142, 182, 155, 0.3) !important;
 }
 
 .undercover-theme .primary-action-btn:disabled {
     background: var(--uc-border) !important;
     color: var(--uc-text-muted) !important;
+    box-shadow: none !important;
     cursor: not-allowed;
+    transform: none;
 }
 
 .undercover-theme .secondary-action-btn {
-    background: var(--uc-bg-color) !important;
-    color: var(--uc-text-main) !important;
-    border: 1px solid var(--uc-border) !important;
+    background: transparent !important;
+    color: var(--uc-text-muted) !important;
+    border: none !important;
     padding: 12px 24px !important;
-    border-radius: 8px !important;
-    font-size: 16px !important;
-    font-weight: 500 !important;
+    border-radius: 99px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: color 0.2s;
 }
 
 .undercover-theme .secondary-action-btn:hover:not(:disabled) {
-    background: var(--uc-border) !important;
+    color: var(--uc-text-main) !important;
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Hide Lobby mode card borders */
+.undercover-theme .game-mode-card {
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+}
+
+.undercover-theme .game-mode-card:hover {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.undercover-theme .game-mode-card.active {
+    background: white !important;
+    color: var(--uc-primary) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
 }

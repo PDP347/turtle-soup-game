@@ -374,18 +374,18 @@ export default function UndercoverRoomPage() {
         <div className="undercover-theme" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start" }}>
             <main className="main-container">
                 {/* Status Header */}
-                <div className="status-header">
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>谁是卧底 · 房间号 {roomId} {isParty ? "🎉 聚会版" : "💬 在线版"}</div>
-                        <div style={{ fontSize: 18, fontWeight: 700 }}>
-                            {sessionData?.phase === "waiting" ? "等待大家加入..." :
-                                sessionData?.phase === "speaking" ? `第 ${sessionData?.roundCount} 轮: 顺序发言` :
-                                    sessionData?.phase === "speaking_pk" ? `⚔️ 决最后战: PK 追加发言！` :
-                                        sessionData?.phase === "discussion" ? `自由讨论阶段` :
-                                            sessionData?.phase === "voting" ? `投票阶段: 抓出内鬼！` : "游戏结束"}
+                <div className="status-header" style={{ padding: "20px", width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                        <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 4, letterSpacing: "1px", textTransform: "uppercase" }}>房间号 {roomId} · {isParty ? "🎉 聚会版" : "💬 在线版"}</div>
+                        <div style={{ fontSize: 20, fontWeight: 700 }}>
+                            {sessionData?.phase === "waiting" ? "等待中..." :
+                                sessionData?.phase === "speaking" ? `第 ${sessionData?.roundCount} 轮发言` :
+                                    sessionData?.phase === "speaking_pk" ? `决战：PK 发言` :
+                                        sessionData?.phase === "discussion" ? `自由讨论` :
+                                            sessionData?.phase === "voting" ? `投票阶段` : "游戏结束"}
                         </div>
                         {(sessionData?.phase === "speaking" || sessionData?.phase === "discussion" || sessionData?.phase === "voting") && timeLeft !== null && (
-                            <div className="timer-badge">
+                            <div className="timer-badge" style={{ display: "inline-block", marginTop: "8px" }}>
                                 倒计时: {timeLeft}s
                             </div>
                         )}
@@ -434,7 +434,7 @@ export default function UndercoverRoomPage() {
                 {/* Voting Panel Overlay */}
                 {
                     sessionData?.phase === "voting" && me?.isAlive && !hasSubmittedVote && (
-                        <div style={{ padding: "20px", background: "var(--uc-card-bg)", borderBottom: "1px solid var(--uc-border)" }}>
+                        <div style={{ padding: "30px 20px", background: "transparent" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", maxWidth: "400px", margin: "0 auto" }}>
                                 <span style={{ color: "var(--uc-accent)", fontWeight: "bold", fontSize: "18px" }}>🩸 关键时刻：你要票出谁？</span>
                                 <select
@@ -471,7 +471,7 @@ export default function UndercoverRoomPage() {
 
 
                 {/* Player Avatars */}
-                <div style={{ display: "flex", gap: 12, padding: "16px", overflowX: "auto", borderBottom: "1px solid var(--uc-border)", background: "var(--uc-card-bg)" }}>
+                <div style={{ display: "flex", gap: 16, padding: "20px", overflowX: "auto", background: "transparent" }}>
                     {sessionData?.players.map((p, i) => (
                         <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                             <div
@@ -580,7 +580,7 @@ export default function UndercoverRoomPage() {
                                 }
 
                                 return (
-                                    <div key={index} className={`message - row ${isMe ? 'me' : 'other'} `}>
+                                    <div key={index} className={`message-row ${isMe ? 'me' : 'other'}`}>
                                         <div className="player-label">
                                             {msg.player_name}
                                         </div>
@@ -598,32 +598,28 @@ export default function UndercoverRoomPage() {
                 {/* Input Area (Text mode only) */}
                 {
                     (!isParty) && (
-                        <div className="input-area">
-                            <div style={{ position: "relative", display: "flex", gap: 12 }}>
-                                {myTurn && (
-                                    <div style={{ position: "absolute", top: -24, left: 16, color: "var(--uc-accent)", fontSize: 12, fontWeight: "bold" }}>
-                                        🔥 轮到你发言了！
-                                    </div>
-                                )}
-                                <div className="input-container" style={{ flex: 1, display: "flex" }}>
-                                    <input
-                                        className="chat-input"
-                                        placeholder={sessionData?.phase === "waiting" ? "大家在大厅闲聊..." : myTurn ? "请描述你的词语（不要直接揭底）..." : "等待其他玩家发言..."}
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendTextMode(); } }}
-                                        disabled={sessionData?.phase === "speaking" && !myTurn}
-                                        style={{ border: "none", background: "transparent", outline: "none", width: "100%", padding: "4px" }}
-                                    />
+                        <div className="input-container" style={{ position: "relative", display: "flex", gap: "12px", alignItems: "center" }}>
+                            {myTurn && (
+                                <div style={{ position: "absolute", top: -20, left: 24, color: "var(--uc-accent)", fontSize: 13, fontWeight: "bold", background: "var(--uc-bg-color)", padding: "0 8px", borderRadius: "10px" }}>
+                                    🔥 轮到你发言了！
                                 </div>
-                                <button
-                                    className="send-btn"
-                                    onClick={handleSendTextMode}
-                                    disabled={!input.trim() || (sessionData?.phase === "speaking" && !myTurn)}
-                                >
-                                    ↑
-                                </button>
-                            </div>
+                            )}
+                            <input
+                                className="chat-input"
+                                placeholder={sessionData?.phase === "waiting" ? "大家在大厅闲聊..." : myTurn ? "描述你的词（勿直接揭底）..." : "等待发言..."}
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendTextMode(); } }}
+                                disabled={sessionData?.phase === "speaking" && !myTurn}
+                                style={{ flex: 1 }}
+                            />
+                            <button
+                                className="send-btn"
+                                onClick={handleSendTextMode}
+                                disabled={!input.trim() || (sessionData?.phase === "speaking" && !myTurn)}
+                            >
+                                ↑
+                            </button>
                         </div>
                     )
                 }
