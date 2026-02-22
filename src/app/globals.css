@@ -71,24 +71,29 @@
 }
 
 .theme-hub {
-  --bg-void: #050508;
-  --bg-surface: #0a0a0f;
-  --bg-card: rgba(15, 15, 20, 0.7);
-  --bg-card-hover: rgba(25, 25, 30, 0.9);
-  --accent-primary: #e0e0e0;
-  --accent-primary-glow: rgba(255, 255, 255, 0.3);
-  --accent-secondary: #718096;
-  --text-primary: #f7fafc;
-  --text-secondary: #a0aec0;
-  --text-muted: #4a5568;
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-accent: rgba(255, 255, 255, 0.3);
-  --shadow-deep: 0 20px 60px rgba(0, 0, 0, 0.9);
-  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --bg-image: linear-gradient(rgba(5, 5, 8, 0.8), rgba(10, 10, 15, 0.9)), url('/images/themes/hub.png');
+  --bg-void: #F8F6F0;
+  /* Warm beige */
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FCFBF9;
+  --accent-primary: #D4A373;
+  /* Warm Sand */
+  --accent-primary-glow: rgba(212, 163, 115, 0.4);
+  --accent-secondary: #8EB69B;
+  /* Sage Green */
+  --text-primary: #2C3E50;
+  --text-secondary: #7F8C8D;
+  --text-muted: #BDC3C7;
+  --border-subtle: #EAE6DF;
+  --border-accent: rgba(212, 163, 115, 0.5);
+  --shadow-deep: 0 10px 40px rgba(0, 0, 0, 0.05);
+  /* Soft, natural shadow */
+  --shadow-glow: 0 0 20px rgba(212, 163, 115, 0.2);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --bg-image: none;
+  /* No mist image, just pure color */
 }
 
 .theme-suspense {
