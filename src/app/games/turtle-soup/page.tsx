@@ -15,7 +15,7 @@ interface Message {
 
 export default function HomePage() {
   const router = useRouter();
-  const [globalTheme, setGlobalTheme] = useState<PuzzleTheme | "hub">("hub");
+  const [globalTheme, setGlobalTheme] = useState<PuzzleTheme | "archive">("archive");
   const [activeThemeFilter, setActiveThemeFilter] = useState<PuzzleTheme | "all">("all");
   const newPuzzleRef = useRef<HTMLDivElement | null>(null);
   const [allPuzzles, setAllPuzzles] = useState<Puzzle[]>([]); // Initialize as empty, will load from API/local storage
@@ -105,7 +105,7 @@ export default function HomePage() {
 
   const handleBack = useCallback(() => {
     setSelectedPuzzle(null);
-    setGlobalTheme(activeThemeFilter === "all" ? "hub" : activeThemeFilter);
+    setGlobalTheme(activeThemeFilter === "all" ? "archive" : activeThemeFilter);
     setMessages([]);
     setShowVictory(false);
     setVictoryText("");
@@ -321,7 +321,7 @@ export default function HomePage() {
       <div className="app-layout">
         {!selectedPuzzle ? (
           <>
-            {globalTheme === "hub" ? (
+            {globalTheme === "archive" ? (
               <div className="hero-section">
                 <div className="hero-overlay" />
                 <div className="hero-content">
@@ -420,7 +420,7 @@ export default function HomePage() {
             )}
 
             <main className="main-content puzzle-selection">
-              {globalTheme !== "hub" && (
+              {globalTheme !== "archive" && (
                 <>
                   <h2 className={`selection-title ${globalTheme !== "healing" ? "glitch-text" : ""}`}>
                     {THEME_META[globalTheme as PuzzleTheme]?.label} 卷宗
@@ -452,7 +452,7 @@ export default function HomePage() {
               <div className="theme-switch-container">
                 <button
                   className={`theme-btn ${activeThemeFilter === "all" ? "active" : ""}`}
-                  onClick={() => { setActiveThemeFilter("all"); setGlobalTheme("hub"); }}
+                  onClick={() => { setActiveThemeFilter("all"); setGlobalTheme("archive"); }}
                 >
                   🗂️ 全部
                 </button>

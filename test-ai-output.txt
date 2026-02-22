@@ -1,0 +1,1 @@
+{"error":"Failed to generate word","detail":"SyntaxError: Unexpected end of JSON input\nRAW: {\n    \"words\": [\n        {\n            \"word\": \"海底捞月\",\n            \"hint\": \"猴子水中捞影，空欢喜一场\",\n            \"category\": \"成语典故\"\n        },\n        {\n            \"word\": \"火山爆发\",\n            \"hint\":"}

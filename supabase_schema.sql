@@ -77,3 +77,50 @@ alter table public.undercover_messages enable row level security;
 
 create policy "allow all undercover rooms" on public.undercover_rooms for all using (true) with check (true);
 create policy "allow all undercover messages" on public.undercover_messages for all using (true) with check (true);
+
+-- =====================================================
+-- 你画我猜模块 (V7)
+-- =====================================================
+
+-- 8. 你画我猜房间表
+create table if not exists public.draw_rooms (
+  id                     text        primary key,  -- 6位随机房间号，如 "AB12CD"
+  status                 text        not null default 'waiting'
+                         check (status in ('waiting', 'selecting', 'drawing', 'round_end', 'game_end')),
+  players                jsonb       not null default '[]'::jsonb,  -- 玩家昵称数组
+  painter                text,                                      -- 当前画师
+  word                   text,                                      -- 当前词语（仅画师可见）
+  word_hint              text,                                      -- 提示（时间过半后展示）
+  word_category          text,                                      -- 词语分类
+  difficulty             text        not null default '中等'
+                         check (difficulty in ('简单', '中等', '困难')),
+  round                  integer     not null default 0,
+  max_rounds             integer     not null default 5,
+  round_start_at         timestamptz,                               -- 本轮开始时间（用于计时）
+  round_duration_seconds integer     not null default 90,
+  scores                 jsonb       not null default '{}'::jsonb,  -- {"昵称": 积分}
+  strokes                jsonb       not null default '[]'::jsonb,  -- 笔画数据，供迟到者同步
+  round_results          jsonb       not null default '[]'::jsonb,  -- 每轮结果汇总
+  created_at             timestamptz not null default now()
+);
+
+-- 9. 你画我猜聊天/猜测消息表
+create table if not exists public.draw_messages (
+  id               uuid        primary key default gen_random_uuid(),
+  room_id          text        not null references public.draw_rooms(id) on delete cascade,
+  player_name      text        not null,
+  content          text        not null,
+  is_correct_guess boolean     not null default false,
+  created_at       timestamptz not null default now()
+);
+
+-- 开启 Realtime
+alter publication supabase_realtime add table public.draw_rooms;
+alter publication supabase_realtime add table public.draw_messages;
+
+-- RLS 策略
+alter table public.draw_rooms    enable row level security;
+alter table public.draw_messages enable row level security;
+
+create policy "allow all draw rooms"    on public.draw_rooms    for all using (true) with check (true);
+create policy "allow all draw messages" on public.draw_messages for all using (true) with check (true);

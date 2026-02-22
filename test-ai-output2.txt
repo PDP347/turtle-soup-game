@@ -1,0 +1,1 @@
+{"success":true,"words":[{"word":"太空漫步","hint":"失重状态下的优雅移动","category":"科幻动作","difficulty":"中等"},{"word":"法式烘焙","hint":"可颂与马卡龙的诞生过程","category":"美食工艺","difficulty":"中等"},{"word":"深海寻宝","hint":"沉船与珊瑚间的探险","category":"冒险场景","difficulty":"中等"}],"source":"ai"}

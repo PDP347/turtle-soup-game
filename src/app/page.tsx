@@ -120,6 +120,45 @@ export default function ArcadeLobby() {
                         </div>
                     </Link>
 
+                    {/* Game 3: Draw and Guess */}
+                    <Link href="/games/draw-and-guess" style={{ textDecoration: "none", flex: "1", minWidth: "280px" }}>
+                        <div style={{
+                            background: "var(--bg-card)",
+                            borderRadius: "24px",
+                            padding: "40px",
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            boxShadow: "0 10px 40px rgba(0,0,0,0.03)",
+                            border: "1px solid var(--border-subtle)",
+                            transition: "all 0.3s ease",
+                            cursor: "pointer"
+                        }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = "translateY(-4px)";
+                                e.currentTarget.style.boxShadow = "0 16px 50px rgba(0,0,0,0.06)";
+                                e.currentTarget.style.borderColor = "#9b59b6";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = "translateY(0)";
+                                e.currentTarget.style.boxShadow = "0 10px 40px rgba(0,0,0,0.03)";
+                                e.currentTarget.style.borderColor = "var(--border-subtle)";
+                            }}
+                        >
+                            <div>
+                                <div style={{ fontSize: "32px", marginBottom: "20px" }}>🎨</div>
+                                <h3 style={{ fontSize: "24px", color: "var(--text-primary)", marginBottom: "12px", fontWeight: 600 }}>你画我猜</h3>
+                                <p style={{ color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.6, opacity: 0.8 }}>
+                                    AI 出题，你来画、我来猜。实时联机，笔触间的默契游戏。
+                                </p>
+                            </div>
+                            <div style={{ color: "#9b59b6", marginTop: "24px", fontSize: "13px", fontFamily: "var(--font-mono)", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span>START DRAWING</span> <span style={{ fontSize: "16px" }}>→</span>
+                            </div>
+                        </div>
+                    </Link>
+
                 </div>
 
                 {/* Footer Footer */}

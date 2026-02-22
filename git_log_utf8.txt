@@ -1,0 +1,24 @@
+﻿a338ce1 style: redesign home page to minimalist Zen Warm P's Arcade
+8797e37 style: implement Borderless Zen chat UI for Undercover
+5d2c5c5 style: revert undercover UI to a clean, flat web-friendly layout and fix button theme
+f4da007 feat: polish Undercover UI, fix Turtle Soup join entry & realtime sync bug
+ead42f6 fix(undercover): enable result UI and play again button for text mode
+fa25dac feat(undercover): add deepseek ai commentary on voting results
+f08d143 fix(undercover): add result ui and play again button for party mode
+1304137 chore: ignore test_deepseek.js
+171ed2d feat(undercover): implement offline party mode with dual-mode architecture and ai word generation
+98e55ec feat(v5.1): implement AI personas, dynamic difficulty, multiplayer play-again sync, and global leaderboard
+505cd77 feat(ui): implement unique victory modal layouts for suspense, urban legend, and dark humor
+103ac1a feat(ui): redesign hub carousel to tall portrait cards with background images
+004a48a fix(ui): hub carousel width to show all 5 themes
+8e73682 feat(ui): v4.2 high-fidelity structural redesign for all themes
+13f3272 style(v4.1): add neutral Hub theme for 'All' category tab
+4ba5d38 style(v4.1): implement unified dynamic theming across the entire UI
+bc5841c feat(v4): implement 5-theme system, dynamic filtration, and bulk import 50 puzzles
+b7e0440 fix: resolve duplicate messages by conditionally applying optimistic UI
+a5fd83e debug: add verbose Realtime connection status tooltip
+c9b3d22 fix: add Realtime status indicator + polling fallback for room page
+3d8dfa8 fix: improve Supabase room creation error message
+33051e5 fix: make Supabase client build-safe with fallback env vars for Vercel SSR
+8629519 feat(V3): add Supabase multiplayer room system with realtime sync
+563e450 Initial commit from Create Next App

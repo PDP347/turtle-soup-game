@@ -70,6 +70,27 @@
   --bg-image: linear-gradient(rgba(254, 250, 244, 0.7), rgba(253, 245, 232, 0.85)), url('/images/themes/healing.png');
 }
 
+.theme-archive {
+  --bg-void: #050508;
+  --bg-surface: #0a0a0f;
+  --bg-card: rgba(15, 15, 20, 0.7);
+  --bg-card-hover: rgba(25, 25, 30, 0.9);
+  --accent-primary: #e0e0e0;
+  --accent-primary-glow: rgba(255, 255, 255, 0.3);
+  --accent-secondary: #718096;
+  --text-primary: #f7fafc;
+  --text-secondary: #a0aec0;
+  --text-muted: #4a5568;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-accent: rgba(255, 255, 255, 0.3);
+  --shadow-deep: 0 20px 60px rgba(0, 0, 0, 0.9);
+  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --bg-image: linear-gradient(rgba(5, 5, 8, 0.8), rgba(10, 10, 15, 0.9)), url('/images/themes/hub.png');
+}
+
 .theme-hub {
   --bg-void: #F8F6F0;
   /* Warm beige */
