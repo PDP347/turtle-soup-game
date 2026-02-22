@@ -45,3 +45,35 @@ create table if not exists public.player_stats (
 
 alter table public.player_stats enable row level security;
 create policy "allow all stats" on public.player_stats for all using (true) with check (true);
+
+-- =====================================================
+-- 谁是卧底模块
+-- =====================================================
+
+-- 6. 谁是卧底房间表
+create table if not exists public.undercover_rooms (
+  id          text        primary key,          -- 4位数字房间号
+  session_data jsonb       not null,             -- 包含游戏阶段、玩家列表、当前发言人等状态
+  status      text        not null default 'waiting' check (status in ('waiting', 'playing', 'finished')),
+  created_at  timestamptz not null default now()
+);
+
+-- 7. 谁是卧底消息表 (用于发言记录与复盘)
+create table if not exists public.undercover_messages (
+  id          bigserial   primary key,
+  room_id     text        not null references public.undercover_rooms(id) on delete cascade,
+  player_name text        not null,
+  content     text        not null,
+  is_ai       boolean     not null default false,
+  message_type text       not null default 'chat', -- 'chat', 'system', 'vote'
+  created_at  timestamptz not null default now()
+);
+
+alter publication supabase_realtime add table public.undercover_rooms;
+alter publication supabase_realtime add table public.undercover_messages;
+
+alter table public.undercover_rooms enable row level security;
+alter table public.undercover_messages enable row level security;
+
+create policy "allow all undercover rooms" on public.undercover_rooms for all using (true) with check (true);
+create policy "allow all undercover messages" on public.undercover_messages for all using (true) with check (true);

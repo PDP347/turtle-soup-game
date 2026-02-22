@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getPuzzleByIdIncludingGenerated, type Puzzle, type PuzzleTheme } from "@/lib/puzzles";
+import { getPuzzleByIdIncludingGenerated, type Puzzle, type PuzzleTheme } from "@/games/turtle-soup/models/puzzles";
 
 const personas: Record<PuzzleTheme, { base: string; nightmare: string }> = {
     bizarre: {

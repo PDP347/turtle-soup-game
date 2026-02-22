@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import type { Puzzle } from "@/lib/puzzles";
+import type { Puzzle } from "@/games/turtle-soup/models/puzzles";
 
 interface Message {
     id: number;
@@ -221,7 +221,7 @@ export default function RoomPage() {
             }));
             historyMessages.push({ role: "user", content: `${playerName}: ${question}` });
 
-            const res = await fetch("/api/chat", {
+            const res = await fetch("/api/games/turtle-soup/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: historyMessages, puzzle: room.puzzle_data }),
@@ -357,11 +357,16 @@ export default function RoomPage() {
                 }
             }
 
-            // ----- 2. 生成同主题新谜题 -----
-            const res = await fetch("/api/puzzle", {
+            // ----- 2. 生成同主题新谜题（混合题库随机 + AI去重） -----
+            const res = await fetch("/api/games/turtle-soup/puzzle", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ theme: currentTheme, difficulty: room.puzzle_data.difficulty || "中等" }),
+                body: JSON.stringify({
+                    theme: currentTheme,
+                    difficulty: room.puzzle_data.difficulty || "中等",
+                    mixExisting: true,
+                    currentPuzzleId: room.puzzle_data.id
+                }),
             });
             if (!res.ok) throw new Error("API error");
             const data = await res.json();

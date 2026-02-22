@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import type { PuzzleTheme, PuzzleDifficulty } from "@/lib/puzzles";
+import type { PuzzleTheme, PuzzleDifficulty } from "@/games/turtle-soup/models/puzzles";
+import { puzzles, getGeneratedPuzzles } from "@/games/turtle-soup/models/puzzles";
 
 const client = new OpenAI({
     apiKey: process.env.DEEPSEEK_API_KEY,
@@ -41,10 +42,40 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const theme: PuzzleTheme = body.theme || "bizarre";
         const difficulty: PuzzleDifficulty = body.difficulty || "中等";
+        const mixExisting: boolean = body.mixExisting === true;
+        const currentPuzzleId: string | undefined = body.currentPuzzleId;
+
+        // Combine all known puzzles to analyze what already exists
+        const allStore = [...puzzles, ...getGeneratedPuzzles()];
+        const themePuzzles = allStore.filter(p => p.theme === theme);
+
+        if (mixExisting) {
+            // Filter candidates that match the exact difficulty and aren't the one we just played
+            const candidatePuzzles = themePuzzles.filter(p => p.difficulty === difficulty && p.id !== currentPuzzleId);
+            // Give a 60% chance to pick an existing high-quality puzzle from the pool to avoid AI repetition fatigue
+            if (candidatePuzzles.length > 0 && Math.random() < 0.6) {
+                const randIndex = Math.floor(Math.random() * candidatePuzzles.length);
+                return NextResponse.json({ success: true, puzzle: candidatePuzzles[randIndex] });
+            }
+        }
+
+        const existingTitles = themePuzzles.map(p => `《${p.title}》`).join("、");
+
+        // Get the last 3 generated puzzles for this theme to strongly prevent consecutive repetition
+        const generatedPuzzlesInfo = getGeneratedPuzzles().filter(p => p.theme === theme).slice(-3);
+        const recentPlots = generatedPuzzlesInfo.length > 0
+            ? `\n【最近生成的AI题目（极度警告：绝对不可与以下真相核心雷同）】：\n` + generatedPuzzlesInfo.map(p => `- 《${p.title}》: 核心真相是 ${p.truth.substring(0, 60)}...`).join("\n")
+            : "";
 
         const systemPrompt = `${themeInstructions[theme]}
 
-请为玩家创作一道【${difficulty}难度】的海龟汤题目。
+请为玩家创作一道全新的【${difficulty}难度】海龟汤题目。
+
+【⚠️核心防重限制】：
+为了避免题库同质化，请绝对**不要**与以下已有题目的核心诡计、人物设定、死法和故事背景发生雷同：
+${existingTitles || "暂无已有题目，可自由发挥"}。${recentPlots}
+
+【禁止套用烂梗】：请刻意避开最常见的套路（如：把人肉当动物肉吃、盲人误以为又瞎了、双胞胎身份顶替、重男轻女复仇、多重人格、为了参加葬礼见某人而杀人、绝症捐献器官等）。你需要设计一个**完全不同视角、有新意、逻辑精妙的原创剧本**。
 
 难度标准：${difficultyInstructions[difficulty]}
 
