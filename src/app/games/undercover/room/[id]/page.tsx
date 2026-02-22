@@ -522,8 +522,8 @@ export default function UndercoverRoomPage() {
                 )}
 
 
-                {/* Party Mode Result UI */}
-                {isParty && sessionData?.phase === "result" && (
+                {/* Result UI for both modes */}
+                {sessionData?.phase === "result" && (
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}>
                         <div style={{ textAlign: "center", background: "var(--bg-card)", padding: "30px", borderRadius: "16px", border: "1px solid var(--border-accent)", boxShadow: "0 0 20px rgba(0,0,0,0.5)" }}>
                             <div style={{ fontSize: "60px", marginBottom: "16px" }}>
