@@ -475,7 +475,66 @@ export default function DrawAndGuessRoom() {
 
     // ── DRAWING / ROUND_END ──
     return (
-        <div style={{ minHeight: "100vh", maxHeight: "100vh", background: "var(--bg-void)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div className="dag-root">
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .dag-root {
+                    min-height: 100vh;
+                    max-height: 100vh;
+                    background: var(--bg-void);
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+                .dag-main-area {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: row;
+                    overflow: hidden;
+                    gap: 0;
+                }
+                .dag-canvas-area {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 16px;
+                    gap: 8px;
+                    overflow: hidden;
+                    min-width: 0;
+                }
+                .dag-chat-panel {
+                    width: 280px;
+                    flex-shrink: 0;
+                    display: flex;
+                    flex-direction: column;
+                    border-left: 1px solid var(--border-subtle);
+                    background: var(--bg-card);
+                    overflow: hidden;
+                }
+                @media (max-width: 768px) {
+                    .dag-root {
+                        max-height: none;
+                        overflow: visible;
+                    }
+                    .dag-main-area {
+                        flex-direction: column;
+                        overflow: visible;
+                    }
+                    .dag-canvas-area {
+                        flex: none;
+                        height: 65vh;
+                        padding: 10px;
+                        overflow: visible;
+                    }
+                    .dag-chat-panel {
+                        width: 100%;
+                        flex: none;
+                        height: 55vh;
+                        border-left: none;
+                        border-top: 1px solid var(--border-subtle);
+                    }
+                }
+            `}} />
             {/* Header */}
             <header style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", background: "var(--bg-card)", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
                 <span style={{ fontSize: 22 }}>🎨</span>
@@ -512,9 +571,9 @@ export default function DrawAndGuessRoom() {
             </header>
 
             {/* Main area */}
-            <div style={{ flex: 1, display: "flex", overflow: "hidden", gap: 0 }}>
+            <div className="dag-main-area">
                 {/* Canvas area */}
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "16px", gap: 8, overflow: "hidden", minWidth: 0 }}>
+                <div className="dag-canvas-area">
                     {/* Word display */}
                     <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                         {isPainter ? (
@@ -553,7 +612,7 @@ export default function DrawAndGuessRoom() {
                 </div>
 
                 {/* Right panel: Chat + Players */}
-                <div style={{ width: 280, flexShrink: 0, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border-subtle)", background: "var(--bg-card)", overflow: "hidden" }}>
+                <div className="dag-chat-panel">
                     {/* Players list */}
                     <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
                         <p style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-muted)", margin: "0 0 8px", letterSpacing: 2 }}>PLAYERS</p>
