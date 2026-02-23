@@ -140,22 +140,23 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
     }, [externalEvent, redrawAll, drawSegment]);
 
     // Get canvas-relative coordinates
-    const getPos = useCallback((e: React.MouseEvent | React.TouchEvent): { x: number; y: number } | null => {
+    const getPos = useCallback((e: React.PointerEvent): { x: number; y: number } | null => {
         const canvas = canvasRef.current;
         if (!canvas) return null;
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        if ("touches" in e) {
-            const touch = e.touches[0] || e.changedTouches[0];
-            return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
-        }
         return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
     }, []);
 
-    const startDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const startDraw = useCallback((e: React.PointerEvent) => {
         if (!isPainter) return;
         e.preventDefault();
+        try {
+            if (e.pointerId) {
+                (e.target as HTMLElement).setPointerCapture(e.pointerId);
+            }
+        } catch (err) { }
         const pos = getPos(e);
         if (!pos) return;
         isDrawing.current = true;
@@ -171,7 +172,7 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
         });
     }, [isPainter, getPos, color, width, isEraser, onDrawEvent]);
 
-    const moveDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const moveDraw = useCallback((e: React.PointerEvent) => {
         if (!isPainter || !isDrawing.current) return;
         e.preventDefault();
         const pos = getPos(e);
@@ -183,9 +184,15 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
         onDrawEvent({ type: "stroke_move", strokeId: currentStrokeId.current, point: pos });
     }, [isPainter, getPos, color, width, isEraser, drawSegment, onDrawEvent]);
 
-    const endDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const endDraw = useCallback((e: React.PointerEvent) => {
         if (!isPainter || !isDrawing.current) return;
         e.preventDefault();
+        try {
+            if (e.pointerId && (e.target as HTMLElement).hasPointerCapture(e.pointerId)) {
+                (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+            }
+        } catch (err) { }
+
         isDrawing.current = false;
         const type = isEraser ? "erase" : "draw";
         const finishedStroke: DrawingStroke = {
@@ -275,13 +282,10 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
                         cursor: !isPainter ? "not-allowed" : isEraser ? "cell" : "crosshair",
                         touchAction: "none",
                     }}
-                    onMouseDown={startDraw}
-                    onMouseMove={moveDraw}
-                    onMouseUp={endDraw}
-                    onMouseLeave={endDraw}
-                    onTouchStart={startDraw}
-                    onTouchMove={moveDraw}
-                    onTouchEnd={endDraw}
+                    onPointerDown={startDraw}
+                    onPointerMove={moveDraw}
+                    onPointerUp={endDraw}
+                    onPointerCancel={endDraw}
                 />
                 {!isPainter && (
                     <div style={{ position: "absolute", inset: 0, cursor: "default" }} />
