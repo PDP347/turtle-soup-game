@@ -22,7 +22,9 @@ export interface DrawingEvent {
     color?: string;
     width?: number;
     point?: DrawingPoint;
+    points?: DrawingPoint[];      // Used for batched stroke moves
     strokeId?: string;
+    allStrokes?: DrawingStroke[]; // Used for saving all strokes on stroke_end
 }
 
 export interface WordEntry {

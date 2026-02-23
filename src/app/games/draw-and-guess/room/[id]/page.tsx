@@ -193,8 +193,8 @@ export default function DrawAndGuessRoom() {
         if (!channelRef.current) return;
         channelRef.current.send({ type: "broadcast", event: "draw", payload: event });
         // Persist strokes to DB on stroke_end for late joiners
-        if (event.type === "stroke_end" && room) {
-            // We don't persist every stroke to DB — it's sent the whole strokes array only when needed
+        if (event.type === "stroke_end" && room && event.allStrokes) {
+            supabase.from("draw_rooms").update({ strokes: event.allStrokes }).eq("id", roomId);
         }
         if (event.type === "clear" && room) {
             supabase.from("draw_rooms").update({ strokes: [] }).eq("id", roomId);

@@ -23,6 +23,8 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
     const isDrawing = useRef(false);
     const currentStrokeId = useRef<string>("");
     const currentPoints = useRef<{ x: number; y: number }[]>([]);
+    const pendingPoints = useRef<{ x: number; y: number }[]>([]); // New ref for batching points
+    const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // New ref for batch interval
     const lastPos = useRef<{ x: number; y: number } | null>(null);
 
     const [color, setColor] = useState("#1a1a1a");
@@ -122,12 +124,36 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
             };
             activeStrokes.current.set(ev.strokeId, newStroke);
         }
-        if (ev.type === "stroke_move" && ev.strokeId && ev.point) {
+        if (ev.type === "stroke_move" && ev.strokeId) {
             const stroke = activeStrokes.current.get(ev.strokeId);
-            if (stroke) {
-                const prev = stroke.points[stroke.points.length - 1];
-                if (prev) drawSegment(prev, ev.point, stroke.color, stroke.width, stroke.type);
-                stroke.points.push(ev.point);
+            // Reconstruct missing stroke_start logic if the first packet was dropped
+            if (!stroke && ev.stroke) {
+                const newStroke: DrawingStroke = {
+                    id: ev.strokeId,
+                    points: ev.points && ev.points.length > 0 ? [ev.points[0]] : (ev.point ? [ev.point] : []),
+                    color: ev.stroke.color || "#1a1a1a",
+                    width: ev.stroke.width || 6,
+                    type: ev.stroke.type || "draw",
+                };
+                activeStrokes.current.set(ev.strokeId, newStroke);
+            }
+
+            const active = activeStrokes.current.get(ev.strokeId);
+            if (active) {
+                // If it came as a single point (legacy fallback)
+                if (ev.point) {
+                    const prev = active.points[active.points.length - 1];
+                    if (prev) drawSegment(prev, ev.point, active.color, active.width, active.type);
+                    active.points.push(ev.point);
+                }
+                // If it came as batched points
+                if (ev.points && ev.points.length > 0) {
+                    for (const p of ev.points) {
+                        const prev = active.points[active.points.length - 1];
+                        if (prev) drawSegment(prev, p, active.color, active.width, active.type);
+                        active.points.push(p);
+                    }
+                }
             }
         }
         if (ev.type === "stroke_end" && ev.strokeId) {
@@ -135,6 +161,10 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
             if (stroke) {
                 strokesRef.current.push(stroke);
                 activeStrokes.current.delete(ev.strokeId);
+            }
+            // If allStrokes is provided by the painter (to persist to DB, usually handled by parent page.tsx), update our ref if we are just a viewer
+            if (ev.allStrokes && Array.isArray(ev.allStrokes)) {
+                strokesRef.current = [...ev.allStrokes];
             }
         }
     }, [externalEvent, redrawAll, drawSegment]);
@@ -180,8 +210,26 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
         const type = isEraser ? "erase" : "draw";
         drawSegment(lastPos.current, pos, color, width, type);
         currentPoints.current.push(pos);
+        pendingPoints.current.push(pos);
         lastPos.current = pos;
-        onDrawEvent({ type: "stroke_move", strokeId: currentStrokeId.current, point: pos });
+
+        // Debounce / Throttle the broadcast to avoid dropping messages over limits
+        if (!batchTimerRef.current) {
+            batchTimerRef.current = setTimeout(() => {
+                const pointsToSync = [...pendingPoints.current];
+                pendingPoints.current = [];
+                if (pointsToSync.length > 0) {
+                    onDrawEvent({
+                        type: "stroke_move",
+                        strokeId: currentStrokeId.current,
+                        points: pointsToSync,
+                        stroke: { color, width, type } // Fallback to reconstruct line
+                    });
+                }
+                batchTimerRef.current = null;
+            }, 80); // Send packets every ~80ms rather than every frame
+        }
+
     }, [isPainter, getPos, color, width, isEraser, drawSegment, onDrawEvent]);
 
     const endDraw = useCallback((e: React.PointerEvent) => {
@@ -194,6 +242,23 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
         } catch (err) { }
 
         isDrawing.current = false;
+
+        // Flush remaining buffered points
+        if (batchTimerRef.current) {
+            clearTimeout(batchTimerRef.current);
+            batchTimerRef.current = null;
+        }
+        if (pendingPoints.current.length > 0) {
+            const type = isEraser ? "erase" : "draw";
+            onDrawEvent({
+                type: "stroke_move",
+                strokeId: currentStrokeId.current,
+                points: [...pendingPoints.current],
+                stroke: { color, width, type }
+            });
+            pendingPoints.current = [];
+        }
+
         const type = isEraser ? "erase" : "draw";
         const finishedStroke: DrawingStroke = {
             id: currentStrokeId.current,
@@ -201,7 +266,11 @@ export default function DrawingCanvas({ isPainter, strokes, onDrawEvent, externa
             color, width, type,
         };
         strokesRef.current.push(finishedStroke);
-        onDrawEvent({ type: "stroke_end", strokeId: currentStrokeId.current });
+        onDrawEvent({
+            type: "stroke_end",
+            strokeId: currentStrokeId.current,
+            allStrokes: [...strokesRef.current]
+        });
         lastPos.current = null;
     }, [isPainter, color, width, isEraser, onDrawEvent]);
 
